@@ -1,0 +1,3717 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayatmil</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1208;--parchment:#f7f2e8;--surface:#ffffff;
+  --gold:#b8860b;--gold-lt:#f0dc82;--gold-dim:#c9a84c;
+  --green:#1e6b45;--green-lt:#d4edda;
+  --orange:#c0610a;--orange-lt:#fde8d4;
+  --muted:#7a6e5f;--border:#ddd4be;
+  --radius:12px;
+}
+body{font-family:'Inter',sans-serif;background:var(--parchment);color:var(--ink);min-height:100vh;direction:ltr;
+  /* horizontal scroll কখনো হবে না */
+  overflow-x:hidden}
+
+/* ── HEADER ── */
+header{background:var(--ink);padding:30px 20px 24px;text-align:center;position:relative;overflow:hidden}
+header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.logo-ar{font-family:'Amiri',serif;font-size:2.6rem;color:var(--gold-lt);direction:rtl;line-height:1.2}
+.logo-en{font-size:.72rem;font-weight:500;color:var(--gold-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:5px}
+.loader-status{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:5px 16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;font-size:.72rem;color:var(--gold-dim);
+  /* ছোট স্ক্রিনে wrap হবে */
+  max-width:90vw;white-space:normal;text-align:center}
+.loader-status .dot{width:7px;height:7px;flex-shrink:0;border-radius:50%;background:var(--gold-dim);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+.loader-status.done .dot{background:#4caf50;animation:none}
+.loader-status.err  .dot{background:#e53935;animation:none}
+
+/* ── SEARCH ── */
+.search-section{
+  max-width:700px;
+  margin:-20px auto 0;
+  /* padding দিয়ে দুপাশে জায়গা, কিন্তু ছোট স্ক্রিনে কম */
+  padding:0 16px;
+  position:relative;z-index:10;
+  /* overflow prevent */
+  box-sizing:border-box;width:100%}
+.search-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;box-shadow:0 6px 30px rgba(0,0,0,.12);overflow:hidden}
+
+/* Search row: input flex হবে, button shrink হবে না */
+.search-row{
+  display:flex;
+  align-items:stretch;  /* button ও input সমান উচ্চতা */
+  min-width:0;          /* flex child overflow prevent */
+}
+.search-input{
+  flex:1 1 0;           /* grow করবে, shrink করবে, কিন্তু min-width 0 */
+  min-width:0;          /* ছোট স্ক্রিনে চাপা দিলে input ছোট হবে, button নয় */
+  padding:16px 14px;
+  font-family:'Amiri',serif;font-size:1.15rem;
+  border:none;outline:none;background:transparent;
+  color:var(--ink);direction:rtl;text-align:right}
+.search-input::placeholder{color:#c0b8ac;font-size:1rem}
+
+.search-btn{
+  flex:0 0 auto;        /* button কখনো shrink হবে না */
+  margin:8px;
+  padding:10px 16px;
+  background:var(--gold);color:#fff;
+  border:none;border-radius:10px;
+  font-size:.8rem;font-weight:600;letter-spacing:.06em;
+  cursor:pointer;transition:background .15s,transform .1s;
+  white-space:nowrap;
+  /* minimum width guarantee */
+  min-width:64px}
+.search-btn:hover{background:#9a6e00}
+.search-btn:active{transform:scale(.97)}
+.search-btn:disabled{background:#ccc;cursor:not-allowed}
+
+/* Opts row: chip-গুলো wrap হবে, সমান gap */
+.opts-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  padding:8px 12px;
+  border-top:1px solid #f0ebe0;
+  background:#faf8f3}
+.opt-chip{
+  display:flex;align-items:center;gap:4px;
+  padding:5px 9px;
+  border:1.5px solid var(--border);border-radius:20px;
+  font-size:.7rem;color:var(--muted);
+  cursor:pointer;user-select:none;
+  transition:border-color .15s,background .15s;
+  white-space:nowrap;  /* chip-এর ভেতরে text wrap হবে না */
+  flex-shrink:0}       /* chip নিজে shrink হবে না */
+.opt-chip input{display:none}
+.opt-chip.active{border-color:var(--gold);background:rgba(184,134,11,.08);color:var(--gold)}
+.opt-chip .chip-dot{width:6px;height:6px;flex-shrink:0;border-radius:50%;background:var(--border);transition:background .15s}
+.opt-chip.active .chip-dot{background:var(--gold)}
+
+/* ── PROGRESS ── */
+.progress-wrap{max-width:700px;margin:8px auto 0;padding:0 16px;display:none;box-sizing:border-box;width:100%}
+.progress-bar{height:3px;background:#e8e0d0;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .3s ease;width:0%}
+.progress-label{font-size:.66rem;color:var(--muted);margin-top:4px;text-align:center}
+
+/* ── MAIN ── */
+main{max-width:700px;margin:20px auto 60px;padding:0 16px;box-sizing:border-box;width:100%}
+
+/* ── STATUS ── */
+.status-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;min-height:24px;flex-wrap:wrap;gap:6px}
+.result-meta{font-size:.75rem;color:var(--muted)}
+.result-meta strong{color:var(--ink)}
+.page-badge{font-size:.66rem;font-weight:700;letter-spacing:.1em;padding:2px 10px;background:var(--ink);color:var(--gold-lt);border-radius:20px}
+
+/* ── STATS ── */
+.stats-strip{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.stat-pill{display:flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:.7rem;font-weight:600;letter-spacing:.04em}
+.stat-pill.exact{background:var(--green-lt);color:var(--green)}
+.stat-pill.partial{background:var(--orange-lt);color:var(--orange)}
+.stat-pill .count{font-size:.8rem}
+
+/* ── RESULT CARDS ── */
+.result-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:box-shadow .18s}
+.result-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.09)}
+.result-card.exact  {border-color:#1e6b45;background:#f0faf4}
+.result-card.partial{border-color:#b8860b;background:#fdfbf0}
+
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;padding:9px 12px;gap:8px;flex-wrap:wrap}
+.result-card.exact   .card-head{border-bottom:1px solid rgba(30,107,69,.15)}
+.result-card.partial .card-head{border-bottom:1px solid rgba(184,134,11,.15)}
+
+.surah-badge-num{width:28px;height:28px;flex-shrink:0;border-radius:50%;background:var(--ink);color:var(--gold-lt);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700}
+.surah-ar{font-family:'Amiri',serif;font-size:.95rem;color:var(--ink);direction:rtl}
+.surah-en{font-size:.65rem;color:var(--muted);font-weight:500}
+.meta-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.ayah-ref{font-size:.66rem;color:var(--muted);background:rgba(0,0,0,.05);padding:2px 8px;border-radius:12px;white-space:nowrap}
+.match-tag{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:.64rem;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+.match-tag.exact  {background:var(--green);color:#fff}
+.match-tag.partial{background:var(--gold);color:#fff}
+.match-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+
+.card-body{padding:14px 14px}
+.arabic-line{font-family:'Amiri',serif;font-size:1.55rem;line-height:2.1;direction:rtl;text-align:right;color:var(--ink);
+  /* word break আরবিতে */
+  overflow-wrap:break-word;word-break:break-word}
+
+/* ── HIGHLIGHT ── */
+.arabic-line mark{
+  background:#fde68a;
+  color:var(--ink);
+  border-radius:3px;
+  padding:0 3px;
+  font-style:normal;
+}
+.arabic-line mark.exact-hl{
+  background:#86efac;
+  color:#14532d;
+}
+.translation{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:.8rem;color:var(--muted);line-height:1.65;font-style:italic;direction:ltr;text-align:left}
+
+/* ── পারা ও পৃষ্ঠা BADGES ── */
+.juz-page-strip{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.06);flex-wrap:wrap}
+.jp-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:600;letter-spacing:.04em;border:1.5px solid transparent}
+.jp-badge.juz {background:#eef2ff;color:#3730a3;border-color:#c7d2fe}
+.jp-badge.page{background:#fdf4ff;color:#7e22ce;border-color:#e9d5ff}
+.jp-badge .jp-label{opacity:.65;font-weight:500}
+.jp-badge .jp-val{font-weight:700}
+
+/* ── CARD FOOTER ── */
+.card-foot{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(0,0,0,.025);border-top:1px solid rgba(0,0,0,.05);gap:8px;flex-wrap:wrap}
+.meta-tags{display:flex;gap:5px;flex-wrap:wrap}
+.mtag{font-size:.64rem;padding:2px 7px;background:rgba(0,0,0,.05);border-radius:10px;color:var(--muted);white-space:nowrap}
+.mtag.juz {background:#eef2ff;color:#3730a3}
+.mtag.page{background:#fdf4ff;color:#7e22ce}
+.sim-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.sim-label{font-size:.64rem;color:var(--muted);white-space:nowrap}
+.sim-bar{width:60px;height:4px;background:rgba(0,0,0,.1);border-radius:2px;overflow:hidden}
+.sim-fill{height:100%;border-radius:2px;background:var(--gold)}
+.result-card.exact .sim-fill{background:var(--green)}
+
+/* ── EMPTY / STATE ── */
+.state-box{text-align:center;padding:50px 16px;color:var(--muted)}
+.state-icon{font-family:'Amiri',serif;font-size:3rem;color:var(--gold-lt);margin-bottom:14px;direction:rtl}
+.state-box h3{font-size:1rem;font-weight:600;color:var(--ink);margin-bottom:6px}
+.state-box p{font-size:.82rem;line-height:1.7}
+
+/* ── PAGINATION ── */
+.pager{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:20px;flex-wrap:wrap;padding:0 4px}
+.pager button{padding:5px 12px;border:1.5px solid var(--border);background:var(--surface);border-radius:8px;font-size:.75rem;cursor:pointer;color:var(--ink);transition:all .15s;white-space:nowrap}
+.pager button:hover{border-color:var(--gold)}
+.pager button.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.pager button:disabled{opacity:.35;cursor:default}
+
+/* ── FOOTER ── */
+.site-footer{text-align:center;padding:18px 20px;font-size:.7rem;color:var(--muted);border-top:1px solid var(--border);margin-top:20px;letter-spacing:.04em}
+.site-footer strong{color:var(--gold);font-weight:600}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════════════════ */
+
+/* 480px এবং নিচে */
+@media (max-width:480px) {
+  .logo-ar{font-size:2.2rem}
+  .search-section{padding:0 12px}
+  .progress-wrap{padding:0 12px}
+  main{padding:0 12px}
+  .search-input{font-size:1.05rem;padding:14px 12px}
+  .search-btn{padding:10px 14px;font-size:.76rem}
+  .arabic-line{font-size:1.4rem}
+}
+
+/* 390px এবং নিচে */
+@media (max-width:390px) {
+  .logo-ar{font-size:1.9rem}
+  .logo-en{font-size:.65rem;letter-spacing:.14em}
+  .search-section{padding:0 10px}
+  .progress-wrap{padding:0 10px}
+  main{padding:0 10px}
+  .search-input{font-size:1rem;padding:13px 10px}
+  .search-btn{padding:9px 12px;font-size:.74rem;min-width:56px}
+  .opts-row{padding:7px 10px;gap:5px}
+  .opt-chip{padding:4px 8px;font-size:.68rem}
+  .arabic-line{font-size:1.3rem;line-height:2}
+  .card-body{padding:12px 12px}
+  .card-head{padding:8px 10px}
+  .card-foot{padding:6px 10px}
+}
+
+/* 360px এবং নিচে */
+@media (max-width:360px) {
+  .logo-ar{font-size:1.7rem}
+  .search-section{padding:0 8px}
+  .progress-wrap{padding:0 8px}
+  main{padding:0 8px}
+  .search-input{font-size:.95rem;padding:12px 10px}
+  .search-btn{padding:9px 11px;font-size:.72rem;min-width:52px;letter-spacing:.02em}
+  .opts-row{padding:6px 8px;gap:4px}
+  .opt-chip{padding:4px 7px;font-size:.66rem}
+  .arabic-line{font-size:1.2rem}
+  .surah-en{display:none} /* 360px-এ ইংরেজি নাম বাদ — আরবি নাম থাকবে */
+}
+
+/* 320px — সবচেয়ে ছোট */
+@media (max-width:320px) {
+  .logo-ar{font-size:1.5rem}
+  .loader-status{font-size:.65rem;padding:4px 10px}
+  .search-section{padding:0 6px}
+  .progress-wrap{padding:0 6px}
+  main{padding:0 6px}
+  .search-input{font-size:.9rem;padding:11px 8px}
+  .search-btn{padding:8px 10px;font-size:.7rem;min-width:48px}
+  .opts-row{padding:6px 6px;gap:4px}
+  .opt-chip{padding:3px 6px;font-size:.64rem}
+  .arabic-line{font-size:1.1rem;line-height:1.9}
+  .card-body{padding:10px 10px}
+  .card-head{padding:7px 8px}
+  .card-foot{padding:5px 8px}
+  .mtag{font-size:.6rem;padding:2px 5px}
+  .jp-badge{padding:2px 7px;font-size:.62rem}
+  .sim-bar{width:44px}
+}
+
+/* ═══ Phase 1: নেভিগেশন ও ভিউ-কন্টেইনার ═══ */
+header{padding-bottom:40px}               /* ট্যাব বারের জন্য জায়গা (সার্চ কার্ড -20px ওভারল্যাপ করে) */
+.app-tabs{display:flex;justify-content:center;gap:6px;margin-top:16px;position:relative;z-index:1;flex-wrap:wrap}
+.app-tab{font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;
+  padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);color:var(--gold-dim);transition:all .15s}
+.app-tab:hover{border-color:var(--gold-dim)}
+.app-tab:focus-visible{outline:2px solid var(--gold-lt);outline-offset:2px}
+.app-tab[aria-selected="true"]{background:var(--gold);border-color:var(--gold);color:#fff}
+.app-view[hidden]{display:none}
+body.view-prayer .loader-status{display:none}   /* কুরআন ডেটার স্ট্যাটাস শুধু সার্চ ট্যাবে */
+.pt-view{max-width:700px;margin:28px auto 60px;padding:0 16px;box-sizing:border-box;width:100%}
+@media(max-width:480px){.app-tab{padding:7px 14px;font-size:.78rem}.pt-view{padding:0 12px}}
+@media(max-width:360px){.pt-view{padding:0 8px}}
+
+/* ═══ Phase 2: নামাজের সময়সূচি — ইঞ্জিন, লোকেশন, সেটিংস ═══ */
+.pt-banner{background:#fff;border:1.5px solid var(--border);border-left:4px solid var(--gold);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:.78rem;line-height:1.65;color:var(--muted)}
+.pt-banner strong{display:block;color:var(--ink);font-size:.86rem;margin-bottom:3px}
+.pt-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.pt-card h3{font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:12px}
+.pt-sub{font-size:.76rem;font-weight:600;color:var(--muted);margin:14px 0 8px}
+.pt-loc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pt-loc-name{font-size:1.05rem;font-weight:700}
+.pt-badge{font-size:.62rem;font-weight:700;padding:2px 9px;border-radius:20px;background:#eee;color:var(--muted)}
+.pt-badge-gps{background:var(--green-lt);color:var(--green)}
+.pt-badge-manual{background:#eef2ff;color:#3730a3}
+.pt-badge-default{background:var(--orange-lt);color:var(--orange)}
+.pt-loc-coords{font-size:.74rem;color:var(--muted);margin-top:4px;word-break:break-word}
+.pt-warn{font-size:.74rem;line-height:1.6;color:var(--orange);background:var(--orange-lt);border-radius:8px;padding:8px 10px;margin-top:8px}
+.pt-btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pt-btn{font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;padding:9px 14px;border-radius:10px;border:1.5px solid var(--border);background:#fff;color:var(--ink);transition:all .15s}
+.pt-btn:hover{border-color:var(--gold)}
+.pt-btn:disabled{opacity:.55;cursor:not-allowed}
+.pt-btn-primary{background:var(--gold);border-color:var(--gold);color:#fff}
+.pt-btn-primary:hover{background:#9a6e00;border-color:#9a6e00}
+.pt-btn-sm{padding:7px 12px}
+.pt-btn:focus-visible,.pt-input:focus-visible,.pt-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pt-msg{font-size:.76rem;line-height:1.6;margin-top:10px;min-height:1px}
+.pt-msg-ok{color:var(--green)} .pt-msg-err{color:#c62828} .pt-msg-warn{color:var(--orange)}
+.pt-manual{margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,0,0,.07)}
+.pt-manual[hidden]{display:none}
+.pt-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pt-chip{font-family:inherit;font-size:.74rem;cursor:pointer;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;color:var(--ink)}
+.pt-chip:hover{border-color:var(--gold);color:var(--gold)}
+.pt-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pt-grid-adj{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pt-wide{grid-column:1/-1}
+.pt-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pt-field>span{font-size:.7rem;font-weight:600;color:var(--muted);line-height:1.4}
+.pt-input{width:100%;min-width:0;font-family:inherit;font-size:.85rem;padding:9px 10px;border:1.5px solid var(--border);border-radius:9px;background:#fff;color:var(--ink)}
+.pt-hint{font-size:.72rem;line-height:1.6;color:var(--muted);margin-top:10px}
+.pt-datebar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pt-date{flex:1 1 140px;width:auto}
+.pt-datelabel{font-size:.82rem;font-weight:600;margin:12px 0 6px}
+.pt-table{width:100%;border-collapse:collapse}
+.pt-table th,.pt-table td{padding:11px 4px;border-bottom:1px solid rgba(0,0,0,.07);text-align:left;vertical-align:middle}
+.pt-table tr:last-child th,.pt-table tr:last-child td{border-bottom:none}
+.pt-pn{display:block;font-size:.92rem;font-weight:600}
+.pt-pe{display:block;font-size:.66rem;color:var(--muted);letter-spacing:.04em}
+.pt-time{text-align:right!important;font-size:1.05rem;font-weight:700;color:var(--green);white-space:nowrap}
+.pt-meta{font-size:.7rem;line-height:1.7;color:var(--muted);margin-top:12px;word-break:break-word}
+.pt-credit{font-size:.68rem;color:var(--muted);text-align:center;line-height:1.6;margin-top:4px}
+@media(max-width:480px){.pt-grid{grid-template-columns:1fr}.pt-grid-adj{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-card{padding:14px 12px}}
+
+/* ═══ Phase 3: এখনকার ওয়াক্ত, কাউন্টডাউন, প্রগ্রেস বার, দৈনিক সূচি ═══ */
+.pt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pt-now{border-color:var(--gold);background:linear-gradient(180deg,#fffdf5 0%,#fff 70%);text-align:center;padding:16px 16px 18px}
+.pt-now-head{display:flex;justify-content:space-between;gap:4px 10px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);text-align:left}
+.pt-now-state{display:inline-block;margin-top:14px;font-size:.7rem;font-weight:700;padding:3px 12px;border-radius:20px;background:#eee;color:var(--muted)}
+.pt-st-waqt{background:var(--green-lt);color:var(--green)}
+.pt-st-gap{background:var(--orange-lt);color:var(--orange)}
+.pt-now-name{font-size:1.9rem;font-weight:700;margin-top:8px;line-height:1.3;color:var(--ink)}
+.pt-now-label{font-size:.82rem;color:var(--muted);margin-top:14px;min-height:1.2em}
+.pt-count{margin-top:4px;font-size:1.85rem;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;line-height:1.35;min-height:2.5rem}
+.pt-cu{font-size:.78rem;font-weight:600;color:var(--muted);margin:0 8px 0 0}
+.pt-bar{height:10px;border-radius:8px;background:#ece5d3;overflow:hidden;margin-top:14px}
+.pt-bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--green),#2f9a66);border-radius:8px;transition:width .9s linear}
+.pt-bar-gap .pt-bar-fill{background:linear-gradient(90deg,var(--gold-dim),var(--gold))}
+.pt-bar-meta{display:flex;justify-content:space-between;gap:6px;font-size:.68rem;color:var(--muted);margin-top:6px}
+.pt-bar-meta span:nth-child(2){font-weight:700;color:var(--ink)}
+.pt-next{font-size:.84rem;font-weight:600;margin-top:12px;color:var(--ink)}
+.pt-note{font-size:.72rem;line-height:1.65;color:var(--muted);margin-top:8px}
+.pt-note:empty,.pt-next:empty{display:none}
+.pt-waqt thead th{font-size:.68rem;font-weight:600;color:var(--muted);padding:2px 4px 8px;text-align:left;border-bottom:1px solid rgba(0,0,0,.1)}
+.pt-r{text-align:right!important}
+.pt-waqt .pt-time{font-size:.9rem;white-space:normal}
+.pt-waqt .pt-time-end{color:var(--ink);font-weight:600}
+.pt-waqt tr.pt-row-current{background:var(--green-lt)}
+.pt-waqt tr.pt-row-current th .pt-pn::after{content:' ●';color:var(--green);font-size:.7em}
+.pt-waqt tr.pt-row-next{background:#fdfbf0}
+.pt-waqt tr.pt-sunrise-row td{font-size:.72rem;line-height:1.6;color:var(--muted);padding:8px 6px;background:#faf6ea;text-align:left;border-bottom:1px solid rgba(0,0,0,.07)}
+.pt-waqt tr.pt-sunrise-row strong{color:var(--ink)}
+@media(max-width:480px){.pt-now{padding:14px 12px 16px}.pt-now-name{font-size:1.6rem}.pt-count{font-size:1.5rem}.pt-waqt .pt-time{font-size:.82rem}}
+@media(max-width:360px){.pt-count{font-size:1.3rem}.pt-cu{margin-right:4px}}
+
+/* ═══ Phase 4: নফল ও মাকরুহ ═══ */
+.pt-extra th{width:44%;padding-right:8px}
+.pt-extra .pt-pn{font-size:.86rem}
+.pt-ext{text-align:right}
+.pt-range{font-size:.84rem;font-weight:600;color:var(--ink)}
+.pt-stat{font-size:.72rem;line-height:1.5;margin-top:2px;color:var(--muted)}
+.pt-stat:empty{display:none}
+.pt-stat-now{color:var(--green);font-weight:700}
+.pt-stat-next{color:var(--gold)}
+.pt-stat-past{color:#9a958a}
+.pt-extra tr.pt-row-current{background:var(--green-lt)}
+.pt-extra tr.pt-row-sub{background:#fbf6e4}
+.pt-extra tr.pt-row-sub.pt-row-current{background:#e8f3e0}
+.pt-extra tr.pt-row-sub th{padding-left:14px}
+.pt-extra tr.pt-row-sub .pt-pn{font-size:.8rem;color:#8a6a00}
+.pt-mk-sum{font-size:.8rem;font-weight:600;line-height:1.65;padding:9px 11px;border-radius:9px;background:#f4f1e8;color:var(--ink);margin-bottom:6px}
+.pt-mk-sum:empty{display:none}
+.pt-mk-now{background:var(--orange-lt);color:var(--orange)}
+.pt-hints .pt-hint{margin-top:8px}
+.pt-scholar{font-weight:600;color:var(--ink)}
+.pt-notes-card .pt-hint:first-of-type{margin-top:0}
+
+/* ═══ Phase 5: সরল UI + মসজিদ ও জামাত ═══ */
+.pt-advanced[hidden]{display:none}
+.pt-link{font-family:inherit;font-size:.7rem;font-weight:600;color:var(--gold);background:none;border:none;padding:2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.pt-link:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pt-now-locwrap{display:inline-flex;gap:8px;align-items:baseline;flex-wrap:wrap;justify-content:flex-end}
+.pt-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.pt-tile{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 6px;text-align:center;display:flex;flex-direction:column;gap:3px;min-width:0}
+.pt-tile-l{font-size:.72rem;font-weight:600;color:var(--muted)}
+.pt-tile-t{font-size:1rem;font-weight:700;color:var(--green);white-space:nowrap}
+.pt-tile-s{font-size:.6rem;line-height:1.4;color:var(--muted)}
+.pt-det{margin-top:10px}
+.pt-det summary{font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer}
+.pt-det .pt-hint{margin-top:6px}
+.pt-foot{font-size:.7rem;line-height:1.7;color:var(--muted);text-align:center;margin:6px 4px 0}
+.pt-scholar-s{font-weight:600;color:var(--ink)}
+.pt-mq-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.pt-mq-head h3{margin:0}
+.pt-mq-form{margin:4px 0 12px;padding:10px;border:1.5px dashed var(--border);border-radius:10px;background:#fffdf7}
+.pt-mq-form .pt-btnrow{margin-top:8px}
+.pt-mq-form .pt-msg{margin-top:6px}
+.pt-mq-del{border-color:#e7b5b5;background:#fff6f6;font-size:.8rem;line-height:1.6}
+.pt-mq-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pt-chip.pt-chip-on{background:var(--gold);border-color:var(--gold);color:#fff}
+.pt-mq-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 14px;font-size:.78rem}
+.pt-mq-empty{margin-top:2px}
+.pt-mq-empty[hidden],.pt-mq-panel[hidden],.pt-mq-form[hidden]{display:none}
+.pt-mq-panel{margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08)}
+.pt-mq-title{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.pt-mq-title strong{font-size:1rem;min-width:0;overflow-wrap:anywhere}
+.pt-mq-acts{display:inline-flex;gap:6px}
+.pt-btn-danger{color:#b3261e;border-color:#e7b5b5}
+.pt-btn-danger:hover{border-color:#b3261e}
+.pt-mq-sum{background:#f4f1e8;border-radius:12px;padding:12px;text-align:center;margin-bottom:12px}
+.pt-mq-sum-l{font-size:.78rem;color:var(--muted)}
+.pt-mq-sum-who{font-size:.84rem;font-weight:600;margin-top:4px;line-height:1.5}
+.pt-mq-count{font-size:1.45rem;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px;min-height:1.9rem}
+.pt-mq-started{font-size:.76rem;font-weight:600;color:var(--orange);margin-top:6px}
+.pt-mq-started:empty{display:none}
+.pt-mq-rows{display:flex;flex-direction:column}
+.pt-mq-row{display:grid;grid-template-columns:4.2rem minmax(0,1fr) auto;column-gap:8px;row-gap:3px;align-items:center;padding:9px 6px;border-bottom:1px solid rgba(0,0,0,.07)}
+.pt-mq-row:last-child{border-bottom:none}
+.pt-mq-row.pt-mq-next{background:#fbf6e4;border-radius:8px}
+.pt-mq-rl{font-size:.9rem;font-weight:600}
+.pt-mq-time{padding:7px 8px;max-width:11rem}
+.pt-mq-clr{padding:6px 10px;line-height:1}
+.pt-mq-clr[hidden]{display:none}
+.pt-mq-stat{grid-column:1/-1;font-size:.72rem;line-height:1.5;color:var(--muted)}
+.pt-mq-st-up{color:var(--gold);font-weight:600}
+.pt-mq-st-started{color:var(--green);font-weight:700}
+.pt-mq-st-past{color:#9a958a}
+.pt-mq-warn{grid-column:1/-1;font-size:.68rem;color:var(--orange)}
+.pt-mq-warn:empty{display:none}
+@media(max-width:360px){.pt-tile-t{font-size:.9rem}.pt-mq-count{font-size:1.2rem}.pt-mq-row{grid-template-columns:3.6rem minmax(0,1fr) auto}}
+
+/* ═══ Phase 6: তারিখ (ইংরেজি · বাংলা · হিজরি) ═══ */
+.pt-dates{display:flex;flex-direction:column;gap:2px;text-align:left;flex:1 1 55%;min-width:0}
+.pt-dates #pt-now-date{font-size:.8rem;font-weight:700;color:var(--ink)}
+.pt-d-en{font-size:.64rem;color:var(--muted);letter-spacing:.02em}
+.pt-d-sub{font-size:.72rem;font-weight:600;color:var(--ink);line-height:1.5}
+.pt-d-sub [hidden]{display:none}
+.pt-d-sep{color:var(--muted)}
+.pt-hj-adj{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:10px;padding:8px;border-radius:10px;background:#f4f1e8}
+.pt-hj-adj[hidden]{display:none}
+.pt-hj-l{font-size:.7rem;font-weight:600;color:var(--muted)}
+.pt-seg{font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:16px;border:1.5px solid var(--border);background:#fff;color:var(--ink)}
+.pt-seg:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pt-seg.pt-seg-on{background:var(--gold);border-color:var(--gold);color:#fff}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-ar">القرآن الكريم</div>
+  <div class="logo-en">Ayatmil</div>
+  <div class="loader-status" id="loader-status">
+    <span class="dot"></span>
+    <span id="loader-text">ডেটা লোড হচ্ছে…</span>
+  </div>
+  <nav class="app-tabs" id="app-tabs" role="tablist" aria-label="প্রধান নেভিগেশন">
+    <button class="app-tab" id="tab-search" role="tab" aria-controls="view-search" aria-selected="true" data-view="search">কুরআন সার্চ</button>
+    <button class="app-tab" id="tab-prayer" role="tab" aria-controls="view-prayer" aria-selected="false" data-view="prayer">নামাজের সময়সূচি</button>
+  </nav>
+</header>
+
+<!-- ভিউ ১: কুরআন সার্চ (বিদ্যমান কোড অপরিবর্তিত, শুধু র‍্যাপার যুক্ত) -->
+<div class="app-view" id="view-search" role="tabpanel" aria-labelledby="tab-search">
+
+<div class="progress-wrap" id="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label">লোড হচ্ছে…</div>
+</div>
+
+<div class="search-section">
+  <div class="search-card">
+    <div class="search-row">
+      <input class="search-input" id="search-input"
+        placeholder="আরবি লিখুন… مثلاً: الرحمن الرحيم"
+        autocomplete="off" spellcheck="false" dir="rtl">
+      <button class="search-btn" id="search-btn" onclick="doSearch()" disabled>সার্চ</button>
+    </div>
+    <div class="opts-row">
+      <label class="opt-chip active" id="chip-exact">
+        <input type="checkbox" id="opt-exact" checked onchange="toggleChip(this,'chip-exact')">
+        <span class="chip-dot"></span> Exact Match
+      </label>
+      <label class="opt-chip active" id="chip-partial">
+        <input type="checkbox" id="opt-partial" checked onchange="toggleChip(this,'chip-partial')">
+        <span class="chip-dot"></span> Partial Match
+      </label>
+      <label class="opt-chip active" id="chip-dia">
+        <input type="checkbox" id="opt-dia" checked onchange="toggleChip(this,'chip-dia')">
+        <span class="chip-dot"></span> হরকত উপেক্ষা
+      </label>
+      <label class="opt-chip active" id="chip-trans">
+        <input type="checkbox" id="opt-trans" checked onchange="toggleChip(this,'chip-trans')">
+        <span class="chip-dot"></span> অনুবাদ দেখাও
+      </label>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="status-bar"  id="status-bar"></div>
+  <div class="stats-strip" id="stats-strip"></div>
+  <div id="results">
+    <div class="state-box">
+      <div class="state-icon">بِسْمِ اللَّهِ</div>
+      <h3>Ayatmil</h3>
+      <p>ডেটা লোড শেষ হলে উপরে আরবি লিখে সার্চ করুন।<br>
+         Exact ও Partial Match, পারা ও পৃষ্ঠা নম্বর সহ দেখাবে।</p>
+    </div>
+  </div>
+  <div class="pager" id="pager"></div>
+</main>
+
+</div><!-- /#view-search -->
+
+<!-- ভিউ ২: নামাজের সময়সূচি (কন্টেইনার — মডিউল পরের ধাপে যুক্ত হবে) -->
+<section class="app-view" id="view-prayer" role="tabpanel" aria-labelledby="tab-prayer" hidden>
+  <div class="pt-view" id="prayer-root">
+    <div class="state-box">
+      <div class="state-icon">الصلاة</div>
+      <h3>নামাজের সময়সূচি</h3>
+      <p>নামাজের সময়সূচি লোড হচ্ছে… (JavaScript চালু থাকতে হবে)</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  Developed by <strong>Muhammad Junaid</strong> &nbsp;·&nbsp; Ayatmil
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let QURAN          = [];
+let currentResults = [];
+let currentQuery   = '';
+let currentPage    = 1;
+const PER_PAGE     = 15;
+
+// ═══════════════════════════════════════════════════════
+//  SURAH METADATA
+// ═══════════════════════════════════════════════════════
+const SURAH = [
+  null,
+  ["الفاتحة","Al-Fatihah"],["البقرة","Al-Baqarah"],["آل عمران","Ali 'Imran"],
+  ["النساء","An-Nisa"],["المائدة","Al-Ma'idah"],["الأنعام","Al-An'am"],
+  ["الأعراف","Al-A'raf"],["الأنفال","Al-Anfal"],["التوبة","At-Tawbah"],
+  ["يونس","Yunus"],["هود","Hud"],["يوسف","Yusuf"],["الرعد","Ar-Ra'd"],
+  ["إبراهيم","Ibrahim"],["الحجر","Al-Hijr"],["النحل","An-Nahl"],
+  ["الإسراء","Al-Isra"],["الكهف","Al-Kahf"],["مريم","Maryam"],
+  ["طه","Ta-Ha"],["الأنبياء","Al-Anbya"],["الحج","Al-Hajj"],
+  ["المؤمنون","Al-Mu'minun"],["النور","An-Nur"],["الفرقان","Al-Furqan"],
+  ["الشعراء","Ash-Shu'ara"],["النمل","An-Naml"],["القصص","Al-Qasas"],
+  ["العنكبوت","Al-Ankabut"],["الروم","Ar-Rum"],["لقمان","Luqman"],
+  ["السجدة","As-Sajdah"],["الأحزاب","Al-Ahzab"],["سبأ","Saba"],
+  ["فاطر","Fatir"],["يس","Ya-Sin"],["الصافات","As-Saffat"],
+  ["ص","Sad"],["الزمر","Az-Zumar"],["غافر","Ghafir"],
+  ["فصلت","Fussilat"],["الشورى","Ash-Shura"],["الزخرف","Az-Zukhruf"],
+  ["الدخان","Ad-Dukhan"],["الجاثية","Al-Jathiyah"],["الأحقاف","Al-Ahqaf"],
+  ["محمد","Muhammad"],["الفتح","Al-Fath"],["الحجرات","Al-Hujurat"],
+  ["ق","Qaf"],["الذاريات","Adh-Dhariyat"],["الطور","At-Tur"],
+  ["النجم","An-Najm"],["القمر","Al-Qamar"],["الرحمن","Ar-Rahman"],
+  ["الواقعة","Al-Waqi'ah"],["الحديد","Al-Hadid"],["المجادلة","Al-Mujadila"],
+  ["الحشر","Al-Hashr"],["الممتحنة","Al-Mumtahanah"],["الصف","As-Saf"],
+  ["الجمعة","Al-Jumu'ah"],["المنافقون","Al-Munafiqun"],["التغابن","At-Taghabun"],
+  ["الطلاق","At-Talaq"],["التحريم","At-Tahrim"],["الملك","Al-Mulk"],
+  ["القلم","Al-Qalam"],["الحاقة","Al-Haqqah"],["المعارج","Al-Ma'arij"],
+  ["نوح","Nuh"],["الجن","Al-Jinn"],["المزمل","Al-Muzzammil"],
+  ["المدثر","Al-Muddaththir"],["القيامة","Al-Qiyamah"],["الإنسان","Al-Insan"],
+  ["المرسلات","Al-Mursalat"],["النبأ","An-Naba"],["النازعات","An-Nazi'at"],
+  ["عبس","Abasa"],["التكوير","At-Takwir"],["الانفطار","Al-Infitar"],
+  ["المطففين","Al-Mutaffifin"],["الانشقاق","Al-Inshiqaq"],["البروج","Al-Buruj"],
+  ["الطارق","At-Tariq"],["الأعلى","Al-A'la"],["الغاشية","Al-Ghashiyah"],
+  ["الفجر","Al-Fajr"],["البلد","Al-Balad"],["الشمس","Ash-Shams"],
+  ["الليل","Al-Layl"],["الضحى","Ad-Duha"],["الشرح","Ash-Sharh"],
+  ["التين","At-Tin"],["العلق","Al-Alaq"],["القدر","Al-Qadr"],
+  ["البينة","Al-Bayyinah"],["الزلزلة","Az-Zalzalah"],["العاديات","Al-Adiyat"],
+  ["القارعة","Al-Qari'ah"],["التكاثر","At-Takathur"],["العصر","Al-Asr"],
+  ["الهمزة","Al-Humazah"],["الفيل","Al-Fil"],["قريش","Quraysh"],
+  ["الماعون","Al-Ma'un"],["الكوثر","Al-Kawthar"],["الكافرون","Al-Kafirun"],
+  ["النصر","An-Nasr"],["المسد","Al-Masad"],["الإخلاص","Al-Ikhlas"],
+  ["الفلق","Al-Falaq"],["الناس","An-Nas"],
+];
+
+// ═══════════════════════════════════════════════════════
+//  JUZ & PAGE LOOKUP — Tanzil.net verified
+// ═══════════════════════════════════════════════════════
+
+// প্রতিটি সূরার আয়াত সংখ্যা (Tanzil verified — মোট ৬২৪৫)
+const AYAH_COUNTS = [
+  0,7,286,200,176,120,165,206,75,129,
+  109,123,111,43,52,99,128,111,110,98,
+  135,112,78,118,64,77,227,93,88,69,
+  60,34,30,73,54,45,83,182,88,75,
+  85,54,53,89,59,37,35,38,29,18,
+  45,60,49,62,55,78,96,29,22,24,
+  13,14,11,11,18,12,12,30,52,52,
+  44,28,28,20,56,40,31,50,40,46,
+  42,29,19,36,25,22,17,19,26,30,
+  20,15,21,11,8,8,19,5,8,8,
+  11,11,8,3,9,5,4,7,3,6,
+  3,5,4,5,6
+];
+// ⚠ Phase 0: উপরের তালিকা সংশোধিত (মোট ৬২৩৬)। আগে সূরা ৭৮ (৪৫) ও সূরা ১০১–১১০ ভুল ছিল।
+// নিচের পুরনো তালিকা শুধু EMDADIA_PAGE_STARTS টেবিলের জন্য রাখা হয়েছে, কারণ ওই টেবিল সম্ভবত
+// পুরনো (ভুল) সংখ্যা দিয়ে তৈরি। বইয়ের সাথে মিলিয়ে যাচাই না করা পর্যন্ত পৃষ্ঠা নম্বরের আচরণ অপরিবর্তিত থাকবে।
+const PAGE_TABLE_COUNTS = [
+  0,
+  7,286,200,176,120,165,206,75,129,109,
+  123,111,43,52,99,128,111,110,98,135,
+  112,78,118,64,77,227,93,88,69,60,
+  34,30,73,54,45,83,182,88,75,85,
+  54,53,89,59,37,35,38,29,18,45,
+  60,49,62,55,78,96,29,22,24,13,
+  14,11,11,18,12,12,30,52,52,44,
+  28,28,20,56,40,31,50,45,46,42,
+  29,19,36,25,22,17,19,26,30,20,
+  15,21,11,8,8,19,5,8,8,11,
+  8,3,11,2,5,4,13,5,6,6,5,4,5,6
+];
+function getPageTableNum(surahNo, ayahNo) {
+  let total = 0;
+  for (let s = 1; s < surahNo; s++) total += PAGE_TABLE_COUNTS[s];
+  return total + ayahNo;
+}
+
+// Global ayah number বের করা
+function getGlobalAyahNum(surahNo, ayahNo) {
+  let total = 0;
+  for (let s = 1; s < surahNo; s++) total += AYAH_COUNTS[s];
+  return total + ayahNo;
+}
+
+// ৩০ পারার শুরুর [সূরা, আয়াত] — বাংলাদেশে প্রচলিত ইন্দো-পাক (হাফিজি) পারা বিভাজন।
+// ⚠ API-র (মাদানি) juz নম্বর ব্যবহার করা হয় না। এই তালিকা এমদাদিয়া পৃষ্ঠা-টেবিলের
+//   EMDADIA_PARA_STARTS-এর সাথেও মিলিয়ে যাচাই করা (পারা ১–২৯)।
+const INDOPAK_JUZ_STARTS = [
+  [1,1],[2,142],[2,253],[3,92],[4,24],[4,148],[5,83],[6,111],[7,88],[8,41],
+  [9,94],[11,6],[12,53],[15,2],[17,1],[18,75],[21,1],[23,1],[25,21],[27,60],
+  [29,45],[33,31],[36,22],[39,32],[41,47],[46,1],[51,31],[58,1],[67,1],[78,1]
+];
+
+function getIndoPakJuz(surahNo, ayahNo) {
+  let juz = 1;
+  for (let i = 0; i < INDOPAK_JUZ_STARTS.length; i++) {
+    const [s, a] = INDOPAK_JUZ_STARTS[i];
+    if (surahNo > s || (surahNo === s && ayahNo >= a)) juz = i + 1;
+    else break;
+  }
+  return juz;
+}
+
+// ═══════════════════════════════════════════════════════
+//  EMDADIA HAFIZI QURAN — Page Mapping
+//  উৎস: এমদাদিয়া লাইব্রেরি হাফেজী কোরআন (৬১১ পৃষ্ঠা)
+//  ডেটা সংগ্রহ: Muhammad Junaid
+//  প্রতিটি index = (book_page - 2), value = global ayah number
+//  অর্থাৎ: index 0 → পৃষ্ঠা ২, index 1 → পৃষ্ঠা ৩, ...
+// ═══════════════════════════════════════════════════════
+const EMDADIA_PAGE_STARTS = [
+  1,8,12,23,31,37,45,56,65,69,
+  77,84,91,96,101,109,113,120,127,134,
+  142,149,154,164,172,180,185,192,195,201,
+  205,211,219,223,227,232,237,240,243,250,
+  255,260,264,267,272,277,282,289,290,294,
+  302,309,316,323,331,339,347,356,364,371,
+  377,385,394,402,409,415,426,434,441,447,
+  451,459,467,474,480,487,494,499,504,506,
+  512,517,522,528,535,540,548,554,562,569,
+  574,581,585,589,595,599,607,615,621,628,
+  634,641,648,656,664,669,672,675,679,683,
+  687,693,701,706,711,715,720,726,733,738,
+  745,752,759,765,773,778,783,790,798,808,
+  816,824,833,841,848,857,862,871,880,884,
+  891,900,908,914,920,927,932,936,941,947,
+  955,966,977,985,992,998,1006,1012,1022,1028,
+  1036,1042,1050,1059,1076,1085,1092,1098,1104,1110,
+  1114,1118,1125,1133,1142,1150,1161,1169,1177,1186,
+  1194,1201,1206,1213,1222,1230,1236,1242,1249,1256,
+  1262,1267,1272,1277,1283,1290,1297,1304,1308,1315,
+  1322,1329,1335,1342,1347,1353,1358,1365,1371,1379,
+  1385,1390,1398,1406,1417,1426,1435,1443,1453,1462,
+  1471,1479,1486,1493,1502,1511,1519,1527,1536,1546,
+  1555,1562,1571,1582,1591,1601,1611,1619,1627,1634,
+  1640,1649,1660,1666,1675,1683,1692,1699,1708,1713,
+  1721,1725,1734,1741,1749,1756,1761,1771,1777,1786,
+  1794,1804,1821,1836,1855,1875,1893,1908,1916,1928,
+  1936,1944,1956,1966,1974,1981,1989,1995,2004,2013,
+  2020,2030,2037,2047,2059,2070,2081,2090,2099,2110,
+  2122,2130,2141,2152,2159,2163,2170,2179,2188,2195,
+  2203,2215,2224,2233,2250,2262,2276,2289,2302,2314,
+  2326,2346,2361,2387,2400,2414,2425,2435,2446,2462,
+  2475,2484,2495,2508,2519,2529,2541,2556,2565,2574,
+  2586,2597,2602,2611,2619,2626,2633,2642,2651,2660,
+  2668,2674,2691,2701,2716,2732,2748,2763,2778,2792,
+  2799,2810,2818,2823,2828,2835,2845,2850,2853,2858,
+  2867,2876,2888,2900,2913,2924,2937,2956,2976,2997,
+  3023,3050,3075,3099,3122,3148,3165,3176,3186,3199,
+  3206,3219,3226,3239,3248,3258,3266,3273,3281,3288,
+  3296,3303,3312,3323,3330,3337,3346,3354,3362,3369,
+  3377,3385,3393,3404,3415,3425,3434,3442,3451,3459,
+  3468,3480,3488,3497,3504,3514,3524,3534,3540,3549,
+  3556,3564,3569,3577,3584,3588,3596,3607,3614,3621,
+  3629,3639,3647,3655,3664,3672,3679,3690,3698,3704,
+  3715,3727,3743,3758,3776,3792,3818,3845,3871,3896,
+  3922,3949,3974,3989,3998,4014,4033,4053,4064,4069,
+  4080,4090,4099,4106,4115,4126,4133,4141,4150,4159,
+  4166,4174,4183,4192,4200,4211,4219,4230,4239,4247,
+  4257,4265,4273,4283,4288,4295,4304,4316,4324,4337,
+  4349,4361,4375,4389,4405,4419,4441,4463,4480,4491,
+  4500,4511,4519,4526,4533,4540,4547,4557,4564,4575,
+  4584,4593,4599,4607,4612,4617,4624,4631,4646,4665,
+  4682,4706,4726,4750,4767,4785,4810,4824,4850,4871,
+  4891,4915,4940,4968,4996,5031,5056,5079,5086,5093,
+  5100,5105,5111,5116,5125,5130,5136,5143,5151,5155,
+  5161,5168,5177,5184,5192,5200,5208,5218,5223,5230,
+  5236,5242,5252,5264,5278,5303,5320,5336,5358,5380,
+  5407,5422,5438,5449,5462,5475,5491,5496,5526,5545,
+  5566,5592,5606,5622,5648,5673,5700,5726,5756,5771,
+  5785,5840,5874,5897,5904,5914,5961,5999,6016,6048,
+  6068,6102,6142,6179,6199,6236,6250,6268,6292,6311
+];
+
+// প্রতিটি পারার শুরুর book page — Emdadia Hafizi Quran
+// index 0 = পারা ১, index 29 = পারা ৩০
+const EMDADIA_PARA_STARTS = [
+  3,23,43,63,83,103,123,143,163,183,
+  203,223,243,263,283,303,323,343,363,383,
+  403,423,443,463,483,503,523,543,563,587
+];
+
+// global ayah number → Emdadia book page (২–৬১১)
+function getEmdadiaPage(globalNum) {
+  let page = 2;
+  for (let i = 0; i < EMDADIA_PAGE_STARTS.length; i++) {
+    if (globalNum >= EMDADIA_PAGE_STARTS[i]) page = i + 2;
+    else break;
+  }
+  return page;
+}
+
+// book page + juz → page number within that juz
+function getPageInJuz(bookPage, juz) {
+  if (juz < 1 || juz > 30) return null;
+  return bookPage - EMDADIA_PARA_STARTS[juz - 1] + 1;
+}
+
+// API-তে juz/page না থাকলে lookup দিয়ে বের করা
+// page = Emdadia book page, pageInJuz = পারার ভেতরে পৃষ্ঠা নম্বর
+function enrichWithJuzPage(ayah) {
+  const g        = getGlobalAyahNum(ayah.surah_no, ayah.ayah_no);
+  const juz      = getIndoPakJuz(ayah.surah_no, ayah.ayah_no);
+  const bookPage = getEmdadiaPage(getPageTableNum(ayah.surah_no, ayah.ayah_no));
+  const pageInJuz = getPageInJuz(bookPage, juz);
+  return { ...ayah, juz, bookPage, pageInJuz };
+}
+
+// ═══════════════════════════════════════════════════════
+//  DATA LOADING
+//  ক্রম: ১) alquran.cloud  ২) quran.com  ৩) jsdelivr  ৪) built-in fallback
+// ═══════════════════════════════════════════════════════
+async function loadQuran() {
+  setStatus('loading', 'ডেটা লোড হচ্ছে…');
+  showProgress(true);
+
+  // Source 1: alquran.cloud (timeout 30s)
+  try {
+    setProgress(5, 'alquran.cloud থেকে লোড হচ্ছে…');
+    const r = await fetchWithTimeout(
+      'https://api.alquran.cloud/v1/quran/quran-uthmani', 30000);
+    const j = await r.json();
+    if (j.code === 200 && j.data?.surahs) {
+      parseAlquranCloud(j.data.surahs);
+      if (QURAN.length > 5000) {
+        setProgress(100, `✓ ${QURAN.length.toLocaleString()} আয়াত লোড সম্পন্ন`);
+        doneLoading('ok'); return;
+      }
+    }
+  } catch(e) { console.warn('source1 fail:', e.message); }
+
+  // Source 2: quran.com v4 (সূরা-ভিত্তিক)
+  try {
+    setProgress(10, 'quran.com থেকে লোড হচ্ছে…');
+    await loadFromQuranCom();
+    if (QURAN.length > 5000) { doneLoading('ok'); return; }
+  } catch(e) { console.warn('source2 fail:', e.message); }
+
+  // Source 3: jsdelivr
+  try {
+    setProgress(20, 'jsdelivr CDN থেকে লোড হচ্ছে…');
+    await loadFromJsdelivr();
+    if (QURAN.length > 5000) { doneLoading('ok'); return; }
+  } catch(e) { console.warn('source3 fail:', e.message); }
+
+  // Source 4: built-in fallback
+  console.warn('সব API ব্যর্থ — built-in ডেটা ব্যবহার হচ্ছে');
+  QURAN = BUILTIN_DATA.map(enrichWithJuzPage);
+  setProgress(100, `⚠ মাত্র ${QURAN.length} আয়াত লোড হয়েছে — ইন্টারনেট সংযোগ পরীক্ষা করুন`);
+  doneLoading('warn');
+}
+
+
+// ── বিসমিল্লাহ প্রিফিক্স সরানো ──
+// কিছু API (যেমন alquran.cloud) সূরার প্রথম আয়াতের শুরুতে বিসমিল্লাহ জুড়ে দেয়।
+// সূরা ১ (ফাতিহা) ও ৯ (তাওবা) বাদে প্রথম আয়াতের শুরুতে চারটি শব্দ মিললে সেগুলো সরানো হয়।
+const BISMILLAH_NORM = ['بسم','الله','الرحمن','الرحيم'];
+function stripBismillah(text, surahNo, ayahNo) {
+  if (!text || ayahNo !== 1 || surahNo === 1 || surahNo === 9) return text;
+  const tokens = text.trim().split(/\s+/);
+  if (tokens.length <= 4) return text;
+  for (let i = 0; i < 4; i++) {
+    if (normalize(tokens[i]) !== BISMILLAH_NORM[i]) return text;
+  }
+  return tokens.slice(4).join(' ');
+}
+
+// ── Source 1: alquran.cloud ──
+function parseAlquranCloud(surahs) {
+  QURAN = [];
+  surahs.forEach(s => {
+    s.ayahs.forEach(a => {
+      const g       = getGlobalAyahNum(s.number, a.numberInSurah);
+      const juz     = getIndoPakJuz(s.number, a.numberInSurah);
+      const bookPage  = getEmdadiaPage(getPageTableNum(s.number, a.numberInSurah));
+      const pageInJuz = getPageInJuz(bookPage, juz);
+      QURAN.push({ surah_no: s.number, ayah_no: a.numberInSurah,
+        ayah_ar: stripBismillah(a.text, s.number, a.numberInSurah), ayah_en: '', juz, bookPage, pageInJuz });
+    });
+  });
+}
+
+// ── Source 2: quran.com v4 ──
+async function loadFromQuranCom() {
+  QURAN = [];
+  for (let s = 1; s <= 114; s++) {
+    setProgress(10 + Math.round((s/114)*30), `quran.com: সূরা ${s}/114…`);
+    const r = await fetchWithTimeout(
+      `https://api.quran.com/api/v4/verses/by_chapter/${s}?per_page=300&fields=text_uthmani`, 10000);
+    const j = await r.json();
+    (j.verses || []).forEach(v => {
+      QURAN.push(enrichWithJuzPage({
+        surah_no: s, ayah_no: v.verse_number,
+        ayah_ar: stripBismillah(v.text_uthmani || '', s, v.verse_number), ayah_en: ''
+      }));
+    });
+  }
+}
+
+// ── Source 3: jsdelivr ──
+async function loadFromJsdelivr() {
+  QURAN = [];
+  for (let s = 1; s <= 114; s++) {
+    setProgress(20 + Math.round((s/114)*60), `jsdelivr: সূরা ${s}/114…`);
+    const r = await fetchWithTimeout(
+      `https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/chapters/${s}.json`, 10000);
+    const j = await r.json();
+    (j.verses || []).forEach(v => {
+      QURAN.push(enrichWithJuzPage({
+        surah_no: s, ayah_no: v.id,
+        ayah_ar: stripBismillah(v.text || '', s, v.id), ayah_en: v.translation || ''
+      }));
+    });
+  }
+}
+
+// ── Utility ──
+function fetchWithTimeout(url, ms = 10000) {
+  return Promise.race([
+    fetch(url),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+  ]);
+}
+
+function doneLoading(mode = 'ok') {
+  showProgress(false);
+  const count = QURAN.length;
+  const isOk  = mode === 'ok' && count > 5000;
+  setStatus(
+    isOk ? 'done' : 'err',
+    isOk ? `✓ ${count.toLocaleString()} আয়াত লোড সম্পন্ন`
+         : `⚠ ${count} আয়াত লোড — পুনরায় পৃষ্ঠা রিফ্রেশ করুন`
+  );
+  document.getElementById('search-btn').disabled = false;
+  document.getElementById('search-input').focus();
+}
+
+function setStatus(type, text) {
+  const el = document.getElementById('loader-status');
+  el.className = 'loader-status ' + (type === 'done' ? 'done' : type === 'err' ? 'err' : '');
+  document.getElementById('loader-text').textContent = text;
+}
+function showProgress(show) {
+  document.getElementById('progress-wrap').style.display = show ? 'block' : 'none';
+}
+function setProgress(pct, label) {
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ARABIC NORMALIZATION
+// ═══════════════════════════════════════════════════════
+function normalize(t) {
+  if (!t) return '';
+  return t
+    .replace(/[\u064B-\u065F\u0610-\u061A\u06D6-\u06DC\u06DF-\u06E4\u06E5\u06E6\u06E7\u06E8\u06EA-\u06ED\u0670\u0653\u0640]/g, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ؤ/g, 'و')
+    .replace(/[ئى]/g, 'ي')
+    .replace(/ء/g, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SIMILARITY
+// ═══════════════════════════════════════════════════════
+function similarity(text, query) {
+  if (text === query) return 100;
+  const qt = query.split(/\s+/).filter(Boolean);
+  if (!qt.length) return 0;
+  let hits = 0;
+  qt.forEach(w => { if (text.includes(w)) hits++; });
+  return Math.round((hits / qt.length) * 100);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEARCH
+// ═══════════════════════════════════════════════════════
+function doSearch() {
+  const raw = document.getElementById('search-input').value.trim();
+  if (!raw) return;
+  if (!QURAN.length) { alert('ডেটা এখনো লোড হয়নি। একটু অপেক্ষা করুন।'); return; }
+
+  const optExact   = document.getElementById('opt-exact').checked;
+  const optPartial = document.getElementById('opt-partial').checked;
+  const optDia     = document.getElementById('opt-dia').checked;
+
+  const query  = optDia ? normalize(raw) : raw;
+  currentQuery = raw;
+
+  const results = [];
+
+  for (const a of QURAN) {
+    const text = optDia ? normalize(a.ayah_ar) : a.ayah_ar;
+    if (!text) continue;
+
+    const words         = text.split(/\s+/);
+    const isExactWord   = words.some(w => w === query);
+    const isPhraseMatch = text.includes(query);
+
+    if ((isExactWord || isPhraseMatch) && optExact) {
+      results.push({ ...a, matchType: 'exact', similarity: 100 });
+    } else if (optPartial) {
+      const queryWords = query.split(/\s+/).filter(w => w.length > 1);
+      const anyMatch   = queryWords.some(w => text.includes(w));
+      if (anyMatch) {
+        const sim = similarity(text, query);
+        if (sim >= 30) results.push({ ...a, matchType: 'partial', similarity: sim });
+      }
+    }
+  }
+
+  results.sort((a, b) => {
+    if (a.matchType !== b.matchType) return a.matchType === 'exact' ? -1 : 1;
+    return b.similarity - a.similarity;
+  });
+
+  currentResults = results;
+  currentPage    = 1;
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HIGHLIGHT
+//  text    = original আরবি (হরকতসহ)
+//  query   = সার্চ শব্দ (opt_dia=true হলে normalize হয়ে আসে)
+//  isExact = true → সবুজ (exact-hl), false → হলুদ
+//  optDia  = true → হরকত উপেক্ষা চালু
+//
+//  পদ্ধতি:
+//  ১. text-কে শব্দ ও space-এ ভাগ করি (split by whitespace, keep delimiters)
+//  ২. প্রতিটি শব্দ normalize করে query-র সাথে মেলাই
+//  ৩. match হলে original শব্দটি <mark> দিয়ে wrap করি
+//  ৪. শুধু সম্পূর্ণ শব্দ বা শব্দের শুরু/শেষ match করি — partial substring নয়
+// ═══════════════════════════════════════════════════════
+function highlight(text, query, isExact, optDia) {
+  if (!query || !text) return esc(text);
+
+  const cls = isExact ? 'exact-hl' : '';
+
+  // query-কে শব্দে ভাগ করি, দীর্ঘ শব্দ আগে (greedy match)
+  const queryParts = query.split(/\s+/).filter(Boolean)
+                          .sort((a, b) => b.length - a.length);
+  if (!queryParts.length) return esc(text);
+
+  try {
+    // text-কে [শব্দ, space, শব্দ, space, ...] আকারে ভাগ করি
+    const tokens = text.split(/(\s+)/);
+
+    const result = tokens.map(token => {
+      // space/whitespace → সরাসরি return
+      if (/^\s+$/.test(token)) return esc(token);
+
+      // এই token-টি match হয় কিনা দেখি
+      const normToken = optDia ? normalize(token) : token;
+
+      const matched = queryParts.some(q => {
+        // exact word match অথবা token শুরুতে/শেষে query আছে
+        // (আরবিতে prefix/suffix diacritic যুক্ত হওয়ায় startsWith/endsWith দরকার)
+        return normToken === q
+            || normToken.startsWith(q)
+            || normToken.endsWith(q);
+      });
+
+      return matched
+        ? `<mark class="${cls}">${esc(token)}</mark>`
+        : esc(token);
+    });
+
+    return result.join('');
+  } catch {
+    return esc(text);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+function render() {
+  const container = document.getElementById('results');
+  const statusEl  = document.getElementById('status-bar');
+  const statsEl   = document.getElementById('stats-strip');
+  const pagerEl   = document.getElementById('pager');
+  const showTrans = document.getElementById('opt-trans').checked;
+  const optDia    = document.getElementById('opt-dia').checked;
+  const dispQuery = optDia ? normalize(currentQuery) : currentQuery;
+
+  if (!currentResults.length) {
+    container.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">لَمْ يُوجَد</div>
+        <h3>কোনো ফলাফল পাওয়া যায়নি</h3>
+        <p>"${esc(currentQuery)}" এই শব্দটি খুঁজে পাওয়া যায়নি।<br>
+        "হরকত উপেক্ষা" চেক করে আবার চেষ্টা করুন।</p>
+      </div>`;
+    statusEl.innerHTML = '';
+    statsEl.innerHTML  = '';
+    pagerEl.innerHTML  = '';
+    return;
+  }
+
+  const exactN   = currentResults.filter(r => r.matchType === 'exact').length;
+  const partialN = currentResults.filter(r => r.matchType === 'partial').length;
+  const pages    = Math.ceil(currentResults.length / PER_PAGE);
+  const slice    = currentResults.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+  statusEl.innerHTML = `
+    <span class="result-meta">মোট <strong>${currentResults.length}</strong> ফলাফল</span>
+    <span class="page-badge">পৃষ্ঠা ${currentPage}/${pages}</span>`;
+
+  statsEl.innerHTML = `
+    ${exactN   ? `<span class="stat-pill exact"><span class="count">${exactN}</span> Exact Match</span>`   : ''}
+    ${partialN ? `<span class="stat-pill partial"><span class="count">${partialN}</span> Partial Match</span>` : ''}`;
+
+  container.innerHTML = slice.map(r => {
+    const [arName, enName] = SURAH[r.surah_no] || ['', ''];
+    const arText = highlight(r.ayah_ar, dispQuery, r.matchType === 'exact', optDia);
+    const trans  = (showTrans && r.ayah_en)
+      ? `<div class="translation">${esc(r.ayah_en)}</div>` : '';
+
+    const juzVal     = r.juz       != null ? r.juz       : '—';
+    const pageInJuz  = r.pageInJuz != null ? r.pageInJuz : '—';
+
+    return `
+    <div class="result-card ${r.matchType}">
+      <div class="card-head">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="surah-badge-num">${r.surah_no}</div>
+          <span class="surah-ar">${arName}</span>
+          <span class="surah-en">${enName}</span>
+        </div>
+        <div class="meta-right">
+          <span class="ayah-ref">আয়াত ${r.ayah_no}</span>
+          <span class="match-tag ${r.matchType}">${r.matchType === 'exact' ? 'EXACT' : 'PARTIAL'}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="arabic-line">${arText}</div>
+        ${trans}
+        <div class="juz-page-strip">
+          <span class="jp-badge juz">
+            <span class="jp-label">পারা</span>
+            <span class="jp-val">${juzVal}</span>
+          </span>
+          <span class="jp-badge page">
+            <span class="jp-label">পারার পৃষ্ঠা</span>
+            <span class="jp-val">${pageInJuz}</span>
+          </span>
+        </div>
+      </div>
+      <div class="card-foot">
+        <div class="meta-tags">
+          <span class="mtag">📖 সূরা ${r.surah_no}</span>
+          <span class="mtag">🔢 আয়াত ${r.ayah_no}</span>
+          <span class="mtag juz">পারা ${juzVal}</span>
+          <span class="mtag page">পৃষ্ঠা ${pageInJuz}</span>
+        </div>
+        <div class="sim-wrap">
+          <span class="sim-label">মিল ${r.similarity}%</span>
+          <div class="sim-bar">
+            <div class="sim-fill" style="width:${r.similarity}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderPager(pages);
+}
+
+function renderPager(pages) {
+  const el = document.getElementById('pager');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let h = `<button ${currentPage===1?'disabled':''} onclick="goPage(${currentPage-1})">← আগে</button>`;
+  for (let p = 1; p <= pages; p++) {
+    if (p===1 || p===pages || Math.abs(p-currentPage)<=1)
+      h += `<button class="${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    else if (Math.abs(p-currentPage)===2)
+      h += `<button disabled>…</button>`;
+  }
+  h += `<button ${currentPage===pages?'disabled':''} onclick="goPage(${currentPage+1})">পরে →</button>`;
+  el.innerHTML = h;
+}
+
+function goPage(p) {
+  currentPage = p;
+  render();
+  document.querySelector('.search-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════
+function toggleChip(cb, id) {
+  document.getElementById(id).classList.toggle('active', cb.checked);
+}
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+// ═══════════════════════════════════════════════════════
+//  BUILT-IN FALLBACK DATA
+// ═══════════════════════════════════════════════════════
+const BUILTIN_DATA = [
+  // সূরা আল-ফাতিহা
+  {surah_no:1,ayah_no:1,ayah_ar:"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",ayah_en:"In the name of Allah, the Entirely Merciful, the Especially Merciful."},
+  {surah_no:1,ayah_no:2,ayah_ar:"الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",ayah_en:"All praise is due to Allah, Lord of the worlds."},
+  {surah_no:1,ayah_no:3,ayah_ar:"الرَّحْمَٰنِ الرَّحِيمِ",ayah_en:"The Entirely Merciful, the Especially Merciful."},
+  {surah_no:1,ayah_no:4,ayah_ar:"مَالِكِ يَوْمِ الدِّينِ",ayah_en:"Sovereign of the Day of Recompense."},
+  {surah_no:1,ayah_no:5,ayah_ar:"إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",ayah_en:"It is You we worship and You we ask for help."},
+  {surah_no:1,ayah_no:6,ayah_ar:"اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",ayah_en:"Guide us to the straight path."},
+  {surah_no:1,ayah_no:7,ayah_ar:"صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",ayah_en:"The path of those upon whom You have bestowed favor, not of those who have evoked anger or of those who are astray."},
+  // আয়াতুল কুরসি
+  {surah_no:2,ayah_no:255,ayah_ar:"اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ",ayah_en:"Allah - there is no deity except Him, the Ever-Living, the Sustainer of existence."},
+  {surah_no:2,ayah_no:256,ayah_ar:"لَا إِكْرَاهَ فِي الدِّينِ ۖ قَد تَّبَيَّنَ الرُّشْدُ مِنَ الْغَيِّ",ayah_en:"There shall be no compulsion in the religion."},
+  // সূরা আর-রহমান
+  {surah_no:55,ayah_no:1,ayah_ar:"الرَّحْمَٰنُ",ayah_en:"The Most Merciful."},
+  {surah_no:55,ayah_no:2,ayah_ar:"عَلَّمَ الْقُرْآنَ",ayah_en:"Taught the Quran."},
+  {surah_no:55,ayah_no:13,ayah_ar:"فَبِأَيِّ آلَاءِ رَبِّكُمَا تُكَذِّبَانِ",ayah_en:"So which of the favors of your Lord would you deny?"},
+  // সূরা ইয়াসিন
+  {surah_no:36,ayah_no:1,ayah_ar:"يس",ayah_en:"Ya, Seen."},
+  {surah_no:36,ayah_no:2,ayah_ar:"وَالْقُرْآنِ الْحَكِيمِ",ayah_en:"By the wise Quran."},
+  {surah_no:36,ayah_no:82,ayah_ar:"إِنَّمَا أَمْرُهُ إِذَا أَرَادَ شَيْئًا أَن يَقُولَ لَهُ كُن فَيَكُونُ",ayah_en:"His command is only when He intends a thing that He says to it, Be, and it is."},
+  // সূরা আল-ইখলাস
+  {surah_no:112,ayah_no:1,ayah_ar:"قُلْ هُوَ اللَّهُ أَحَدٌ",ayah_en:"Say: He is Allah, the One."},
+  {surah_no:112,ayah_no:2,ayah_ar:"اللَّهُ الصَّمَدُ",ayah_en:"Allah, the Eternal Refuge."},
+  {surah_no:112,ayah_no:3,ayah_ar:"لَمْ يَلِدْ وَلَمْ يُولَدْ",ayah_en:"He neither begets nor is born."},
+  {surah_no:112,ayah_no:4,ayah_ar:"وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ",ayah_en:"Nor is there to Him any equivalent."},
+];
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+loadQuran();
+
+// ═══════════════════════════════════════════════════════
+//  নেভিগেশন (Phase 1) — আলাদা স্কোপ, কোনো গ্লোবাল নাম নেই
+//  #prayer → নামাজের সময়সূচি, অন্য সবকিছু → কুরআন সার্চ
+// ═══════════════════════════════════════════════════════
+(function () {
+  const views = { search: document.getElementById('view-search'),
+                  prayer: document.getElementById('view-prayer') };
+  const tabs  = { search: document.getElementById('tab-search'),
+                  prayer: document.getElementById('tab-prayer') };
+
+  function show(name) {
+    if (!views[name]) name = 'search';
+    Object.keys(views).forEach(k => {
+      views[k].hidden = (k !== name);
+      tabs[k].setAttribute('aria-selected', String(k === name));
+      tabs[k].tabIndex = (k === name) ? 0 : -1;
+    });
+    document.body.classList.toggle('view-prayer', name === 'prayer');
+  }
+  function fromHash() { show(location.hash === '#prayer' ? 'prayer' : 'search'); }
+
+  Object.keys(tabs).forEach(k => tabs[k].addEventListener('click', () => {
+    if (k === 'prayer') { location.hash = 'prayer'; }
+    else { history.pushState(null, '', location.pathname + location.search); fromHash(); }
+  }));
+  document.getElementById('app-tabs').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const next = document.body.classList.contains('view-prayer') ? 'search' : 'prayer';
+    tabs[next].focus(); tabs[next].click();
+  });
+  window.addEventListener('hashchange', fromHash);
+  window.addEventListener('popstate', fromHash);
+  fromHash();
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+  THIRD-PARTY NOTICE
+  adhan-js 4.4.3 — https://github.com/batoulapps/adhan-js
+  নিচের স্ক্রিপ্টে লাইব্রেরির অপরিবর্তিত UMD বান্ডেল ইনলাইন করা হয়েছে।
+  The MIT License (MIT)
+
+  Copyright (c) 2016 Batoul Apps
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+════════════════════════════════════════════════════════════════════ -->
+<script id="ayatmil-prayer-engine">
+/*! adhan-js 4.4.3 | The MIT License (MIT) | Copyright (c) 2016 Batoul Apps | Full license text in the THIRD-PARTY NOTICE comment above this script. */
+(function () {
+'use strict';
+const ADHAN = (function () {
+  var module = { exports: {} }, exports = module.exports, define = undefined;
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.adhan = {}));
+})(this, (function (exports) { 'use strict';
+
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+      enumerableOnly && (symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      })), keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = null != arguments[i] ? arguments[i] : {};
+      i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+
+    return target;
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  }
+
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  var Madhab = {
+    Shafi: 'shafi',
+    Hanafi: 'hanafi'
+  };
+  function shadowLength(madhab) {
+    switch (madhab) {
+      case Madhab.Shafi:
+        return 1;
+
+      case Madhab.Hanafi:
+        return 2;
+
+      default:
+        throw 'Invalid Madhab';
+    }
+  }
+
+  var HighLatitudeRule = {
+    MiddleOfTheNight: 'middleofthenight',
+    SeventhOfTheNight: 'seventhofthenight',
+    TwilightAngle: 'twilightangle',
+    recommended: function recommended(coordinates) {
+      if (coordinates.latitude > 48) {
+        return HighLatitudeRule.SeventhOfTheNight;
+      } else {
+        return HighLatitudeRule.MiddleOfTheNight;
+      }
+    }
+  };
+
+  var Coordinates = /*#__PURE__*/_createClass(function Coordinates(latitude, longitude) {
+    _classCallCheck(this, Coordinates);
+
+    this.latitude = latitude;
+    this.longitude = longitude;
+  });
+
+  var Rounding = {
+    Nearest: 'nearest',
+    Up: 'up',
+    None: 'none'
+  };
+
+  function dateByAddingDays(date, days) {
+    var year = date.getFullYear();
+    var month = date.getMonth();
+    var day = date.getDate() + days;
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var seconds = date.getSeconds();
+    return new Date(year, month, day, hours, minutes, seconds);
+  }
+  function dateByAddingMinutes(date, minutes) {
+    return dateByAddingSeconds(date, minutes * 60);
+  }
+  function dateByAddingSeconds(date, seconds) {
+    return new Date(date.getTime() + seconds * 1000);
+  }
+  function roundedMinute(date) {
+    var rounding = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Rounding.Nearest;
+    var seconds = date.getUTCSeconds();
+    var offset = seconds >= 30 ? 60 - seconds : -1 * seconds;
+
+    if (rounding === Rounding.Up) {
+      offset = 60 - seconds;
+    } else if (rounding === Rounding.None) {
+      offset = 0;
+    }
+
+    return dateByAddingSeconds(date, offset);
+  }
+  function dayOfYear(date) {
+    var returnedDayOfYear = 0;
+    var feb = Astronomical.isLeapYear(date.getFullYear()) ? 29 : 28;
+    var months = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    for (var i = 0; i < date.getMonth(); i++) {
+      returnedDayOfYear += months[i];
+    }
+
+    returnedDayOfYear += date.getDate();
+    return returnedDayOfYear;
+  }
+  function isValidDate(date) {
+    return date instanceof Date && !isNaN(date.valueOf());
+  }
+
+  function degreesToRadians(degrees) {
+    return degrees * Math.PI / 180.0;
+  }
+  function radiansToDegrees(radians) {
+    return radians * 180.0 / Math.PI;
+  }
+  function normalizeToScale(num, max) {
+    return num - max * Math.floor(num / max);
+  }
+  function unwindAngle(angle) {
+    return normalizeToScale(angle, 360.0);
+  }
+  function quadrantShiftAngle(angle) {
+    if (angle >= -180 && angle <= 180) {
+      return angle;
+    }
+
+    return angle - 360 * Math.round(angle / 360);
+  }
+
+  // Shafaq is the twilight in the sky. Different madhabs define the appearance of
+  // twilight differently. These values are used by the MoonsightingComittee method
+  // for the different ways to calculate Isha.
+  var Shafaq = {
+    // General is a combination of Ahmer and Abyad.
+    General: 'general',
+    // Ahmer means the twilight is the red glow in the sky. Used by the Shafi, Maliki, and Hanbali madhabs.
+    Ahmer: 'ahmer',
+    // Abyad means the twilight is the white glow in the sky. Used by the Hanafi madhab.
+    Abyad: 'abyad'
+  };
+
+  /* eslint-disable max-params, max-lines */
+  var Astronomical = {
+    /* The geometric mean longitude of the sun in degrees. */
+    meanSolarLongitude: function meanSolarLongitude(julianCentury) {
+      var T = julianCentury;
+      /* Equation from Astronomical Algorithms page 163 */
+
+      var term1 = 280.4664567;
+      var term2 = 36000.76983 * T;
+      var term3 = 0.0003032 * Math.pow(T, 2);
+      var L0 = term1 + term2 + term3;
+      return unwindAngle(L0);
+    },
+
+    /* The geometric mean longitude of the moon in degrees. */
+    meanLunarLongitude: function meanLunarLongitude(julianCentury) {
+      var T = julianCentury;
+      /* Equation from Astronomical Algorithms page 144 */
+
+      var term1 = 218.3165;
+      var term2 = 481267.8813 * T;
+      var Lp = term1 + term2;
+      return unwindAngle(Lp);
+    },
+    ascendingLunarNodeLongitude: function ascendingLunarNodeLongitude(julianCentury) {
+      var T = julianCentury;
+      /* Equation from Astronomical Algorithms page 144 */
+
+      var term1 = 125.04452;
+      var term2 = 1934.136261 * T;
+      var term3 = 0.0020708 * Math.pow(T, 2);
+      var term4 = Math.pow(T, 3) / 450000;
+      var Omega = term1 - term2 + term3 + term4;
+      return unwindAngle(Omega);
+    },
+
+    /* The mean anomaly of the sun. */
+    meanSolarAnomaly: function meanSolarAnomaly(julianCentury) {
+      var T = julianCentury;
+      /* Equation from Astronomical Algorithms page 163 */
+
+      var term1 = 357.52911;
+      var term2 = 35999.05029 * T;
+      var term3 = 0.0001537 * Math.pow(T, 2);
+      var M = term1 + term2 - term3;
+      return unwindAngle(M);
+    },
+
+    /* The Sun's equation of the center in degrees. */
+    solarEquationOfTheCenter: function solarEquationOfTheCenter(julianCentury, meanAnomaly) {
+      var T = julianCentury;
+      /* Equation from Astronomical Algorithms page 164 */
+
+      var Mrad = degreesToRadians(meanAnomaly);
+      var term1 = (1.914602 - 0.004817 * T - 0.000014 * Math.pow(T, 2)) * Math.sin(Mrad);
+      var term2 = (0.019993 - 0.000101 * T) * Math.sin(2 * Mrad);
+      var term3 = 0.000289 * Math.sin(3 * Mrad);
+      return term1 + term2 + term3;
+    },
+
+    /* The apparent longitude of the Sun, referred to the
+          true equinox of the date. */
+    apparentSolarLongitude: function apparentSolarLongitude(julianCentury, meanLongitude) {
+      var T = julianCentury;
+      var L0 = meanLongitude;
+      /* Equation from Astronomical Algorithms page 164 */
+
+      var longitude = L0 + Astronomical.solarEquationOfTheCenter(T, Astronomical.meanSolarAnomaly(T));
+      var Omega = 125.04 - 1934.136 * T;
+      var Lambda = longitude - 0.00569 - 0.00478 * Math.sin(degreesToRadians(Omega));
+      return unwindAngle(Lambda);
+    },
+
+    /* The mean obliquity of the ecliptic, formula
+          adopted by the International Astronomical Union.
+          Represented in degrees. */
+    meanObliquityOfTheEcliptic: function meanObliquityOfTheEcliptic(julianCentury) {
+      var T = julianCentury;
+      /* Equation from Astronomical Algorithms page 147 */
+
+      var term1 = 23.439291;
+      var term2 = 0.013004167 * T;
+      var term3 = 0.0000001639 * Math.pow(T, 2);
+      var term4 = 0.0000005036 * Math.pow(T, 3);
+      return term1 - term2 - term3 + term4;
+    },
+
+    /* The mean obliquity of the ecliptic, corrected for
+          calculating the apparent position of the sun, in degrees. */
+    apparentObliquityOfTheEcliptic: function apparentObliquityOfTheEcliptic(julianCentury, meanObliquityOfTheEcliptic) {
+      var T = julianCentury;
+      var Epsilon0 = meanObliquityOfTheEcliptic;
+      /* Equation from Astronomical Algorithms page 165 */
+
+      var O = 125.04 - 1934.136 * T;
+      return Epsilon0 + 0.00256 * Math.cos(degreesToRadians(O));
+    },
+
+    /* Mean sidereal time, the hour angle of the vernal equinox, in degrees. */
+    meanSiderealTime: function meanSiderealTime(julianCentury) {
+      var T = julianCentury;
+      /* Equation from Astronomical Algorithms page 165 */
+
+      var JD = T * 36525 + 2451545.0;
+      var term1 = 280.46061837;
+      var term2 = 360.98564736629 * (JD - 2451545);
+      var term3 = 0.000387933 * Math.pow(T, 2);
+      var term4 = Math.pow(T, 3) / 38710000;
+      var Theta = term1 + term2 + term3 - term4;
+      return unwindAngle(Theta);
+    },
+    nutationInLongitude: function nutationInLongitude(julianCentury, solarLongitude, lunarLongitude, ascendingNode) {
+      var L0 = solarLongitude;
+      var Lp = lunarLongitude;
+      var Omega = ascendingNode;
+      /* Equation from Astronomical Algorithms page 144 */
+
+      var term1 = -17.2 / 3600 * Math.sin(degreesToRadians(Omega));
+      var term2 = 1.32 / 3600 * Math.sin(2 * degreesToRadians(L0));
+      var term3 = 0.23 / 3600 * Math.sin(2 * degreesToRadians(Lp));
+      var term4 = 0.21 / 3600 * Math.sin(2 * degreesToRadians(Omega));
+      return term1 - term2 - term3 + term4;
+    },
+    nutationInObliquity: function nutationInObliquity(julianCentury, solarLongitude, lunarLongitude, ascendingNode) {
+      var L0 = solarLongitude;
+      var Lp = lunarLongitude;
+      var Omega = ascendingNode;
+      /* Equation from Astronomical Algorithms page 144 */
+
+      var term1 = 9.2 / 3600 * Math.cos(degreesToRadians(Omega));
+      var term2 = 0.57 / 3600 * Math.cos(2 * degreesToRadians(L0));
+      var term3 = 0.1 / 3600 * Math.cos(2 * degreesToRadians(Lp));
+      var term4 = 0.09 / 3600 * Math.cos(2 * degreesToRadians(Omega));
+      return term1 + term2 + term3 - term4;
+    },
+    altitudeOfCelestialBody: function altitudeOfCelestialBody(observerLatitude, declination, localHourAngle) {
+      var Phi = observerLatitude;
+      var delta = declination;
+      var H = localHourAngle;
+      /* Equation from Astronomical Algorithms page 93 */
+
+      var term1 = Math.sin(degreesToRadians(Phi)) * Math.sin(degreesToRadians(delta));
+      var term2 = Math.cos(degreesToRadians(Phi)) * Math.cos(degreesToRadians(delta)) * Math.cos(degreesToRadians(H));
+      return radiansToDegrees(Math.asin(term1 + term2));
+    },
+    approximateTransit: function approximateTransit(longitude, siderealTime, rightAscension) {
+      var L = longitude;
+      var Theta0 = siderealTime;
+      var a2 = rightAscension;
+      /* Equation from page Astronomical Algorithms 102 */
+
+      var Lw = L * -1;
+      return normalizeToScale((a2 + Lw - Theta0) / 360, 1);
+    },
+
+    /* The time at which the sun is at its highest point in the sky (in universal time) */
+    correctedTransit: function correctedTransit(approximateTransit, longitude, siderealTime, rightAscension, previousRightAscension, nextRightAscension) {
+      var m0 = approximateTransit;
+      var L = longitude;
+      var Theta0 = siderealTime;
+      var a2 = rightAscension;
+      var a1 = previousRightAscension;
+      var a3 = nextRightAscension;
+      /* Equation from page Astronomical Algorithms 102 */
+
+      var Lw = L * -1;
+      var Theta = unwindAngle(Theta0 + 360.985647 * m0);
+      var a = unwindAngle(Astronomical.interpolateAngles(a2, a1, a3, m0));
+      var H = quadrantShiftAngle(Theta - Lw - a);
+      var dm = H / -360;
+      return (m0 + dm) * 24;
+    },
+    correctedHourAngle: function correctedHourAngle(approximateTransit, angle, coordinates, afterTransit, siderealTime, rightAscension, previousRightAscension, nextRightAscension, declination, previousDeclination, nextDeclination) {
+      var m0 = approximateTransit;
+      var h0 = angle;
+      var Theta0 = siderealTime;
+      var a2 = rightAscension;
+      var a1 = previousRightAscension;
+      var a3 = nextRightAscension;
+      var d2 = declination;
+      var d1 = previousDeclination;
+      var d3 = nextDeclination;
+      /* Equation from page Astronomical Algorithms 102 */
+
+      var Lw = coordinates.longitude * -1;
+      var term1 = Math.sin(degreesToRadians(h0)) - Math.sin(degreesToRadians(coordinates.latitude)) * Math.sin(degreesToRadians(d2));
+      var term2 = Math.cos(degreesToRadians(coordinates.latitude)) * Math.cos(degreesToRadians(d2));
+      var H0 = radiansToDegrees(Math.acos(term1 / term2));
+      var m = afterTransit ? m0 + H0 / 360 : m0 - H0 / 360;
+      var Theta = unwindAngle(Theta0 + 360.985647 * m);
+      var a = unwindAngle(Astronomical.interpolateAngles(a2, a1, a3, m));
+      var delta = Astronomical.interpolate(d2, d1, d3, m);
+      var H = Theta - Lw - a;
+      var h = Astronomical.altitudeOfCelestialBody(coordinates.latitude, delta, H);
+      var term3 = h - h0;
+      var term4 = 360 * Math.cos(degreesToRadians(delta)) * Math.cos(degreesToRadians(coordinates.latitude)) * Math.sin(degreesToRadians(H));
+      var dm = term3 / term4;
+      return (m + dm) * 24;
+    },
+
+    /* Interpolation of a value given equidistant
+          previous and next values and a factor
+          equal to the fraction of the interpolated
+          point's time over the time between values. */
+    interpolate: function interpolate(y2, y1, y3, n) {
+      /* Equation from Astronomical Algorithms page 24 */
+      var a = y2 - y1;
+      var b = y3 - y2;
+      var c = b - a;
+      return y2 + n / 2 * (a + b + n * c);
+    },
+
+    /* Interpolation of three angles, accounting for
+          angle unwinding. */
+    interpolateAngles: function interpolateAngles(y2, y1, y3, n) {
+      /* Equation from Astronomical Algorithms page 24 */
+      var a = unwindAngle(y2 - y1);
+      var b = unwindAngle(y3 - y2);
+      var c = b - a;
+      return y2 + n / 2 * (a + b + n * c);
+    },
+
+    /* The Julian Day for the given Gregorian date components. */
+    julianDay: function julianDay(year, month, day) {
+      var hours = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+
+      /* Equation from Astronomical Algorithms page 60 */
+      var trunc = Math.trunc;
+      var Y = trunc(month > 2 ? year : year - 1);
+      var M = trunc(month > 2 ? month : month + 12);
+      var D = day + hours / 24;
+      var A = trunc(Y / 100);
+      var B = trunc(2 - A + trunc(A / 4));
+      var i0 = trunc(365.25 * (Y + 4716));
+      var i1 = trunc(30.6001 * (M + 1));
+      return i0 + i1 + D + B - 1524.5;
+    },
+
+    /* Julian century from the epoch. */
+    julianCentury: function julianCentury(julianDay) {
+      /* Equation from Astronomical Algorithms page 163 */
+      return (julianDay - 2451545.0) / 36525;
+    },
+
+    /* Whether or not a year is a leap year (has 366 days). */
+    isLeapYear: function isLeapYear(year) {
+      if (year % 4 !== 0) {
+        return false;
+      }
+
+      if (year % 100 === 0 && year % 400 !== 0) {
+        return false;
+      }
+
+      return true;
+    },
+    seasonAdjustedMorningTwilight: function seasonAdjustedMorningTwilight(latitude, dayOfYear, year, sunrise) {
+      var a = 75 + 28.65 / 55.0 * Math.abs(latitude);
+      var b = 75 + 19.44 / 55.0 * Math.abs(latitude);
+      var c = 75 + 32.74 / 55.0 * Math.abs(latitude);
+      var d = 75 + 48.1 / 55.0 * Math.abs(latitude);
+
+      var adjustment = function () {
+        var dyy = Astronomical.daysSinceSolstice(dayOfYear, year, latitude);
+
+        if (dyy < 91) {
+          return a + (b - a) / 91.0 * dyy;
+        } else if (dyy < 137) {
+          return b + (c - b) / 46.0 * (dyy - 91);
+        } else if (dyy < 183) {
+          return c + (d - c) / 46.0 * (dyy - 137);
+        } else if (dyy < 229) {
+          return d + (c - d) / 46.0 * (dyy - 183);
+        } else if (dyy < 275) {
+          return c + (b - c) / 46.0 * (dyy - 229);
+        } else {
+          return b + (a - b) / 91.0 * (dyy - 275);
+        }
+      }();
+
+      return dateByAddingSeconds(sunrise, Math.round(adjustment * -60.0));
+    },
+    seasonAdjustedEveningTwilight: function seasonAdjustedEveningTwilight(latitude, dayOfYear, year, sunset, shafaq) {
+      var a, b, c, d;
+
+      if (shafaq === Shafaq.Ahmer) {
+        a = 62 + 17.4 / 55.0 * Math.abs(latitude);
+        b = 62 - 7.16 / 55.0 * Math.abs(latitude);
+        c = 62 + 5.12 / 55.0 * Math.abs(latitude);
+        d = 62 + 19.44 / 55.0 * Math.abs(latitude);
+      } else if (shafaq === Shafaq.Abyad) {
+        a = 75 + 25.6 / 55.0 * Math.abs(latitude);
+        b = 75 + 7.16 / 55.0 * Math.abs(latitude);
+        c = 75 + 36.84 / 55.0 * Math.abs(latitude);
+        d = 75 + 81.84 / 55.0 * Math.abs(latitude);
+      } else {
+        a = 75 + 25.6 / 55.0 * Math.abs(latitude);
+        b = 75 + 2.05 / 55.0 * Math.abs(latitude);
+        c = 75 - 9.21 / 55.0 * Math.abs(latitude);
+        d = 75 + 6.14 / 55.0 * Math.abs(latitude);
+      }
+
+      var adjustment = function () {
+        var dyy = Astronomical.daysSinceSolstice(dayOfYear, year, latitude);
+
+        if (dyy < 91) {
+          return a + (b - a) / 91.0 * dyy;
+        } else if (dyy < 137) {
+          return b + (c - b) / 46.0 * (dyy - 91);
+        } else if (dyy < 183) {
+          return c + (d - c) / 46.0 * (dyy - 137);
+        } else if (dyy < 229) {
+          return d + (c - d) / 46.0 * (dyy - 183);
+        } else if (dyy < 275) {
+          return c + (b - c) / 46.0 * (dyy - 229);
+        } else {
+          return b + (a - b) / 91.0 * (dyy - 275);
+        }
+      }();
+
+      return dateByAddingSeconds(sunset, Math.round(adjustment * 60.0));
+    },
+    daysSinceSolstice: function daysSinceSolstice(dayOfYear, year, latitude) {
+      var daysSinceSolstice = 0;
+      var northernOffset = 10;
+      var southernOffset = Astronomical.isLeapYear(year) ? 173 : 172;
+      var daysInYear = Astronomical.isLeapYear(year) ? 366 : 365;
+
+      if (latitude >= 0) {
+        daysSinceSolstice = dayOfYear + northernOffset;
+
+        if (daysSinceSolstice >= daysInYear) {
+          daysSinceSolstice = daysSinceSolstice - daysInYear;
+        }
+      } else {
+        daysSinceSolstice = dayOfYear - southernOffset;
+
+        if (daysSinceSolstice < 0) {
+          daysSinceSolstice = daysSinceSolstice + daysInYear;
+        }
+      }
+
+      return daysSinceSolstice;
+    }
+  };
+
+  var SolarCoordinates = /*#__PURE__*/_createClass(function SolarCoordinates(julianDay) {
+    _classCallCheck(this, SolarCoordinates);
+
+    var T = Astronomical.julianCentury(julianDay);
+    var L0 = Astronomical.meanSolarLongitude(T);
+    var Lp = Astronomical.meanLunarLongitude(T);
+    var Omega = Astronomical.ascendingLunarNodeLongitude(T);
+    var Lambda = degreesToRadians(Astronomical.apparentSolarLongitude(T, L0));
+    var Theta0 = Astronomical.meanSiderealTime(T);
+    var dPsi = Astronomical.nutationInLongitude(T, L0, Lp, Omega);
+    var dEpsilon = Astronomical.nutationInObliquity(T, L0, Lp, Omega);
+    var Epsilon0 = Astronomical.meanObliquityOfTheEcliptic(T);
+    var EpsilonApparent = degreesToRadians(Astronomical.apparentObliquityOfTheEcliptic(T, Epsilon0));
+    /* declination: The declination of the sun, the angle between
+            the rays of the Sun and the plane of the Earth's
+            equator, in degrees.
+            Equation from Astronomical Algorithms page 165 */
+
+    this.declination = radiansToDegrees(Math.asin(Math.sin(EpsilonApparent) * Math.sin(Lambda)));
+    /* rightAscension: Right ascension of the Sun, the angular distance on the
+            celestial equator from the vernal equinox to the hour circle,
+            in degrees.
+            Equation from Astronomical Algorithms page 165 */
+
+    this.rightAscension = unwindAngle(radiansToDegrees(Math.atan2(Math.cos(EpsilonApparent) * Math.sin(Lambda), Math.cos(Lambda))));
+    /* apparentSiderealTime: Apparent sidereal time, the hour angle of the vernal
+            equinox, in degrees.
+            Equation from Astronomical Algorithms page 88 */
+
+    this.apparentSiderealTime = Theta0 + dPsi * 3600 * Math.cos(degreesToRadians(Epsilon0 + dEpsilon)) / 3600;
+  });
+
+  var SolarTime = /*#__PURE__*/function () {
+    function SolarTime(date, coordinates) {
+      _classCallCheck(this, SolarTime);
+
+      var julianDay = Astronomical.julianDay(date.getFullYear(), date.getMonth() + 1, date.getDate(), 0);
+      this.observer = coordinates;
+      this.solar = new SolarCoordinates(julianDay);
+      this.prevSolar = new SolarCoordinates(julianDay - 1);
+      this.nextSolar = new SolarCoordinates(julianDay + 1);
+      var m0 = Astronomical.approximateTransit(coordinates.longitude, this.solar.apparentSiderealTime, this.solar.rightAscension);
+      var solarAltitude = -50.0 / 60.0;
+      this.approxTransit = m0;
+      this.transit = Astronomical.correctedTransit(m0, coordinates.longitude, this.solar.apparentSiderealTime, this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension);
+      this.sunrise = Astronomical.correctedHourAngle(m0, solarAltitude, coordinates, false, this.solar.apparentSiderealTime, this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension, this.solar.declination, this.prevSolar.declination, this.nextSolar.declination);
+      this.sunset = Astronomical.correctedHourAngle(m0, solarAltitude, coordinates, true, this.solar.apparentSiderealTime, this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension, this.solar.declination, this.prevSolar.declination, this.nextSolar.declination);
+    }
+
+    _createClass(SolarTime, [{
+      key: "hourAngle",
+      value: function hourAngle(angle, afterTransit) {
+        return Astronomical.correctedHourAngle(this.approxTransit, angle, this.observer, afterTransit, this.solar.apparentSiderealTime, this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension, this.solar.declination, this.prevSolar.declination, this.nextSolar.declination);
+      }
+    }, {
+      key: "afternoon",
+      value: function afternoon(shadowLength) {
+        // TODO source shadow angle calculation
+        var tangent = Math.abs(this.observer.latitude - this.solar.declination);
+        var inverse = shadowLength + Math.tan(degreesToRadians(tangent));
+        var angle = radiansToDegrees(Math.atan(1.0 / inverse));
+        return this.hourAngle(angle, true);
+      }
+    }]);
+
+    return SolarTime;
+  }();
+
+  var PolarCircleResolution = {
+    AqrabBalad: 'AqrabBalad',
+    AqrabYaum: 'AqrabYaum',
+    Unresolved: 'Unresolved'
+  };
+  var LATITUDE_VARIATION_STEP = 0.5; // Degrees to add/remove at each resolution step
+
+  var UNSAFE_LATITUDE = 65; // Based on https://en.wikipedia.org/wiki/Midnight_sun
+
+  var isValidSolarTime = function isValidSolarTime(solarTime) {
+    return !isNaN(solarTime.sunrise) && !isNaN(solarTime.sunset);
+  };
+
+  var aqrabYaumResolver = function aqrabYaumResolver(coordinates, date) {
+    var daysAdded = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+    var direction = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
+
+    if (daysAdded > Math.ceil(365 / 2)) {
+      return null;
+    }
+
+    var testDate = new Date(date.getTime());
+    testDate.setDate(testDate.getDate() + direction * daysAdded);
+    var tomorrow = dateByAddingDays(testDate, 1);
+    var solarTime = new SolarTime(testDate, coordinates);
+    var tomorrowSolarTime = new SolarTime(tomorrow, coordinates);
+
+    if (!isValidSolarTime(solarTime) || !isValidSolarTime(tomorrowSolarTime)) {
+      return aqrabYaumResolver(coordinates, date, daysAdded + (direction > 0 ? 0 : 1), -direction);
+    }
+
+    return {
+      date: date,
+      tomorrow: tomorrow,
+      coordinates: coordinates,
+      solarTime: solarTime,
+      tomorrowSolarTime: tomorrowSolarTime
+    };
+  };
+
+  var aqrabBaladResolver = function aqrabBaladResolver(coordinates, date, latitude) {
+    var solarTime = new SolarTime(date, _objectSpread2(_objectSpread2({}, coordinates), {}, {
+      latitude: latitude
+    }));
+    var tomorrow = dateByAddingDays(date, 1);
+    var tomorrowSolarTime = new SolarTime(tomorrow, _objectSpread2(_objectSpread2({}, coordinates), {}, {
+      latitude: latitude
+    }));
+
+    if (!isValidSolarTime(solarTime) || !isValidSolarTime(tomorrowSolarTime)) {
+      return Math.abs(latitude) >= UNSAFE_LATITUDE ? aqrabBaladResolver(coordinates, date, latitude - Math.sign(latitude) * LATITUDE_VARIATION_STEP) : null;
+    }
+
+    return {
+      date: date,
+      tomorrow: tomorrow,
+      coordinates: new Coordinates(latitude, coordinates.longitude),
+      solarTime: solarTime,
+      tomorrowSolarTime: tomorrowSolarTime
+    };
+  };
+
+  var polarCircleResolvedValues = function polarCircleResolvedValues(resolver, date, coordinates) {
+    var defaultReturn = {
+      date: date,
+      tomorrow: dateByAddingDays(date, 1),
+      coordinates: coordinates,
+      solarTime: new SolarTime(date, coordinates),
+      tomorrowSolarTime: new SolarTime(dateByAddingDays(date, 1), coordinates)
+    };
+
+    switch (resolver) {
+      case PolarCircleResolution.AqrabYaum:
+        {
+          return aqrabYaumResolver(coordinates, date) || defaultReturn;
+        }
+
+      case PolarCircleResolution.AqrabBalad:
+        {
+          var latitude = coordinates.latitude;
+          return aqrabBaladResolver(coordinates, date, latitude - Math.sign(latitude) * LATITUDE_VARIATION_STEP) || defaultReturn;
+        }
+
+      default:
+        {
+          return defaultReturn;
+        }
+    }
+  };
+
+  var CalculationParameters = /*#__PURE__*/function () {
+    // Madhab to determine how Asr is calculated.
+    // Rule to determine the earliest time for Fajr and latest time for Isha
+    // needed for high latitude locations where Fajr and Isha may not truly exist
+    // or may present a hardship unless bound to a reasonable time.
+    // Manual adjustments (in minutes) to be added to each prayer time.
+    // Adjustments set by a calculation method. This value should not be manually modified.
+    // Rule to determine how to resolve prayer times inside the Polar Circle
+    // where daylight or night may persist for more than 24 hours depending
+    // on the season
+    // How seconds are rounded when calculating prayer times
+    // Used by the MoonsightingCommittee method to determine how to calculate Isha
+    function CalculationParameters( // Name of the method, can be used to apply special behavior in calculations.
+    // This property should not be manually modified.
+    method) {
+      var fajrAngle = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      var ishaAngle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      var ishaInterval = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+      var maghribAngle = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+
+      _classCallCheck(this, CalculationParameters);
+
+      _defineProperty(this, "madhab", Madhab.Shafi);
+
+      _defineProperty(this, "highLatitudeRule", HighLatitudeRule.MiddleOfTheNight);
+
+      _defineProperty(this, "adjustments", {
+        fajr: 0,
+        sunrise: 0,
+        dhuhr: 0,
+        asr: 0,
+        maghrib: 0,
+        isha: 0
+      });
+
+      _defineProperty(this, "methodAdjustments", {
+        fajr: 0,
+        sunrise: 0,
+        dhuhr: 0,
+        asr: 0,
+        maghrib: 0,
+        isha: 0
+      });
+
+      _defineProperty(this, "polarCircleResolution", PolarCircleResolution.Unresolved);
+
+      _defineProperty(this, "rounding", Rounding.Nearest);
+
+      _defineProperty(this, "shafaq", Shafaq.General);
+
+      this.method = method;
+      this.fajrAngle = fajrAngle;
+      this.ishaAngle = ishaAngle;
+      this.ishaInterval = ishaInterval;
+      this.maghribAngle = maghribAngle;
+
+      if (this.method === null) {
+        // we don't want a breaking change
+        this.method = 'Other';
+      }
+    }
+
+    _createClass(CalculationParameters, [{
+      key: "nightPortions",
+      value: function nightPortions() {
+        switch (this.highLatitudeRule) {
+          case HighLatitudeRule.MiddleOfTheNight:
+            return {
+              fajr: 1 / 2,
+              isha: 1 / 2
+            };
+
+          case HighLatitudeRule.SeventhOfTheNight:
+            return {
+              fajr: 1 / 7,
+              isha: 1 / 7
+            };
+
+          case HighLatitudeRule.TwilightAngle:
+            return {
+              fajr: this.fajrAngle / 60,
+              isha: this.ishaAngle / 60
+            };
+
+          default:
+            throw "Invalid high latitude rule found when attempting to compute night portions: ".concat(this.highLatitudeRule);
+        }
+      }
+    }]);
+
+    return CalculationParameters;
+  }();
+
+  var CalculationMethod = {
+    // Muslim World League
+    MuslimWorldLeague: function MuslimWorldLeague() {
+      var params = new CalculationParameters('MuslimWorldLeague', 18, 17);
+      params.methodAdjustments.dhuhr = 1;
+      return params;
+    },
+    // Egyptian General Authority of Survey
+    Egyptian: function Egyptian() {
+      var params = new CalculationParameters('Egyptian', 19.5, 17.5);
+      params.methodAdjustments.dhuhr = 1;
+      return params;
+    },
+    // University of Islamic Sciences, Karachi
+    Karachi: function Karachi() {
+      var params = new CalculationParameters('Karachi', 18, 18);
+      params.methodAdjustments.dhuhr = 1;
+      return params;
+    },
+    // Umm al-Qura University, Makkah
+    UmmAlQura: function UmmAlQura() {
+      return new CalculationParameters('UmmAlQura', 18.5, 0, 90);
+    },
+    // Dubai
+    Dubai: function Dubai() {
+      var params = new CalculationParameters('Dubai', 18.2, 18.2);
+      params.methodAdjustments = _objectSpread2(_objectSpread2({}, params.methodAdjustments), {}, {
+        sunrise: -3,
+        dhuhr: 3,
+        asr: 3,
+        maghrib: 3
+      });
+      return params;
+    },
+    // Moonsighting Committee
+    MoonsightingCommittee: function MoonsightingCommittee() {
+      var params = new CalculationParameters('MoonsightingCommittee', 18, 18);
+      params.methodAdjustments = _objectSpread2(_objectSpread2({}, params.methodAdjustments), {}, {
+        dhuhr: 5,
+        maghrib: 3
+      });
+      return params;
+    },
+    // ISNA
+    NorthAmerica: function NorthAmerica() {
+      var params = new CalculationParameters('NorthAmerica', 15, 15);
+      params.methodAdjustments.dhuhr = 1;
+      return params;
+    },
+    // Kuwait
+    Kuwait: function Kuwait() {
+      return new CalculationParameters('Kuwait', 18, 17.5);
+    },
+    // Qatar
+    Qatar: function Qatar() {
+      return new CalculationParameters('Qatar', 18, 0, 90);
+    },
+    // Singapore
+    Singapore: function Singapore() {
+      var params = new CalculationParameters('Singapore', 20, 18);
+      params.methodAdjustments.dhuhr = 1;
+      params.rounding = Rounding.Up;
+      return params;
+    },
+    // Institute of Geophysics, University of Tehran
+    Tehran: function Tehran() {
+      var params = new CalculationParameters('Tehran', 17.7, 14, 0, 4.5);
+      return params;
+    },
+    // Dianet
+    Turkey: function Turkey() {
+      var params = new CalculationParameters('Turkey', 18, 17);
+      params.methodAdjustments = _objectSpread2(_objectSpread2({}, params.methodAdjustments), {}, {
+        sunrise: -7,
+        dhuhr: 5,
+        asr: 4,
+        maghrib: 7
+      });
+      return params;
+    },
+    // Other
+    Other: function Other() {
+      return new CalculationParameters('Other', 0, 0);
+    }
+  };
+
+  var Prayer = {
+    Fajr: 'fajr',
+    Sunrise: 'sunrise',
+    Dhuhr: 'dhuhr',
+    Asr: 'asr',
+    Maghrib: 'maghrib',
+    Isha: 'isha',
+    None: 'none'
+  };
+
+  var TimeComponents = /*#__PURE__*/function () {
+    function TimeComponents(num) {
+      _classCallCheck(this, TimeComponents);
+
+      this.hours = Math.floor(num);
+      this.minutes = Math.floor((num - this.hours) * 60);
+      this.seconds = Math.floor((num - (this.hours + this.minutes / 60)) * 60 * 60);
+      return this;
+    }
+
+    _createClass(TimeComponents, [{
+      key: "utcDate",
+      value: function utcDate(year, month, date) {
+        return new Date(Date.UTC(year, month, date, this.hours, this.minutes, this.seconds));
+      }
+    }]);
+
+    return TimeComponents;
+  }();
+
+  var PrayerTimes = /*#__PURE__*/function () {
+    // eslint-disable-next-line complexity
+    function PrayerTimes(coordinates, date, calculationParameters) {
+      _classCallCheck(this, PrayerTimes);
+
+      this.coordinates = coordinates;
+      this.date = date;
+      this.calculationParameters = calculationParameters;
+      var solarTime = new SolarTime(date, coordinates);
+      var fajrTime;
+      var sunriseTime;
+      var dhuhrTime;
+      var asrTime;
+      var sunsetTime;
+      var maghribTime;
+      var ishaTime;
+      var nightFraction;
+      dhuhrTime = new TimeComponents(solarTime.transit).utcDate(date.getFullYear(), date.getMonth(), date.getDate());
+      sunriseTime = new TimeComponents(solarTime.sunrise).utcDate(date.getFullYear(), date.getMonth(), date.getDate());
+      sunsetTime = new TimeComponents(solarTime.sunset).utcDate(date.getFullYear(), date.getMonth(), date.getDate());
+      var tomorrow = dateByAddingDays(date, 1);
+      var tomorrowSolarTime = new SolarTime(tomorrow, coordinates);
+      var polarCircleResolver = calculationParameters.polarCircleResolution;
+
+      if ((!isValidDate(sunriseTime) || !isValidDate(sunsetTime) || isNaN(tomorrowSolarTime.sunrise)) && polarCircleResolver !== PolarCircleResolution.Unresolved) {
+        var _TimeComponents, _TimeComponents2, _TimeComponents3;
+
+        var resolved = polarCircleResolvedValues(polarCircleResolver, date, coordinates);
+        solarTime = resolved.solarTime;
+        tomorrowSolarTime = resolved.tomorrowSolarTime;
+        var dateComponents = [date.getFullYear(), date.getMonth(), date.getDate()];
+        dhuhrTime = (_TimeComponents = new TimeComponents(solarTime.transit)).utcDate.apply(_TimeComponents, dateComponents);
+        sunriseTime = (_TimeComponents2 = new TimeComponents(solarTime.sunrise)).utcDate.apply(_TimeComponents2, dateComponents);
+        sunsetTime = (_TimeComponents3 = new TimeComponents(solarTime.sunset)).utcDate.apply(_TimeComponents3, dateComponents);
+      } // eslint-disable-next-line prefer-const
+
+
+      asrTime = new TimeComponents(solarTime.afternoon(shadowLength(calculationParameters.madhab))).utcDate(date.getFullYear(), date.getMonth(), date.getDate());
+      var tomorrowSunrise = new TimeComponents(tomorrowSolarTime.sunrise).utcDate(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+      var night = (Number(tomorrowSunrise) - Number(sunsetTime)) / 1000;
+      fajrTime = new TimeComponents(solarTime.hourAngle(-1 * calculationParameters.fajrAngle, false)).utcDate(date.getFullYear(), date.getMonth(), date.getDate()); // special case for moonsighting committee above latitude 55
+
+      if (calculationParameters.method === 'MoonsightingCommittee' && coordinates.latitude >= 55) {
+        nightFraction = night / 7;
+        fajrTime = dateByAddingSeconds(sunriseTime, -nightFraction);
+      }
+
+      var safeFajr = function () {
+        if (calculationParameters.method === 'MoonsightingCommittee') {
+          return Astronomical.seasonAdjustedMorningTwilight(coordinates.latitude, dayOfYear(date), date.getFullYear(), sunriseTime);
+        } else {
+          var portion = calculationParameters.nightPortions().fajr;
+          nightFraction = portion * night;
+          return dateByAddingSeconds(sunriseTime, -nightFraction);
+        }
+      }();
+
+      if (isNaN(fajrTime.getTime()) || safeFajr > fajrTime) {
+        fajrTime = safeFajr;
+      }
+
+      if (calculationParameters.ishaInterval > 0) {
+        ishaTime = dateByAddingMinutes(sunsetTime, calculationParameters.ishaInterval);
+      } else {
+        ishaTime = new TimeComponents(solarTime.hourAngle(-1 * calculationParameters.ishaAngle, true)).utcDate(date.getFullYear(), date.getMonth(), date.getDate()); // special case for moonsighting committee above latitude 55
+
+        if (calculationParameters.method === 'MoonsightingCommittee' && coordinates.latitude >= 55) {
+          nightFraction = night / 7;
+          ishaTime = dateByAddingSeconds(sunsetTime, nightFraction);
+        }
+
+        var safeIsha = function () {
+          if (calculationParameters.method === 'MoonsightingCommittee') {
+            return Astronomical.seasonAdjustedEveningTwilight(coordinates.latitude, dayOfYear(date), date.getFullYear(), sunsetTime, calculationParameters.shafaq);
+          } else {
+            var portion = calculationParameters.nightPortions().isha;
+            nightFraction = portion * night;
+            return dateByAddingSeconds(sunsetTime, nightFraction);
+          }
+        }();
+
+        if (isNaN(ishaTime.getTime()) || safeIsha < ishaTime) {
+          ishaTime = safeIsha;
+        }
+      }
+
+      maghribTime = sunsetTime;
+
+      if (calculationParameters.maghribAngle) {
+        var angleBasedMaghrib = new TimeComponents(solarTime.hourAngle(-1 * calculationParameters.maghribAngle, true)).utcDate(date.getFullYear(), date.getMonth(), date.getDate());
+
+        if (sunsetTime < angleBasedMaghrib && ishaTime > angleBasedMaghrib) {
+          maghribTime = angleBasedMaghrib;
+        }
+      }
+
+      var fajrAdjustment = (calculationParameters.adjustments.fajr || 0) + (calculationParameters.methodAdjustments.fajr || 0);
+      var sunriseAdjustment = (calculationParameters.adjustments.sunrise || 0) + (calculationParameters.methodAdjustments.sunrise || 0);
+      var dhuhrAdjustment = (calculationParameters.adjustments.dhuhr || 0) + (calculationParameters.methodAdjustments.dhuhr || 0);
+      var asrAdjustment = (calculationParameters.adjustments.asr || 0) + (calculationParameters.methodAdjustments.asr || 0);
+      var maghribAdjustment = (calculationParameters.adjustments.maghrib || 0) + (calculationParameters.methodAdjustments.maghrib || 0);
+      var ishaAdjustment = (calculationParameters.adjustments.isha || 0) + (calculationParameters.methodAdjustments.isha || 0);
+      this.fajr = roundedMinute(dateByAddingMinutes(fajrTime, fajrAdjustment), calculationParameters.rounding);
+      this.sunrise = roundedMinute(dateByAddingMinutes(sunriseTime, sunriseAdjustment), calculationParameters.rounding);
+      this.dhuhr = roundedMinute(dateByAddingMinutes(dhuhrTime, dhuhrAdjustment), calculationParameters.rounding);
+      this.asr = roundedMinute(dateByAddingMinutes(asrTime, asrAdjustment), calculationParameters.rounding);
+      this.sunset = roundedMinute(sunsetTime, calculationParameters.rounding);
+      this.maghrib = roundedMinute(dateByAddingMinutes(maghribTime, maghribAdjustment), calculationParameters.rounding);
+      this.isha = roundedMinute(dateByAddingMinutes(ishaTime, ishaAdjustment), calculationParameters.rounding);
+    }
+
+    _createClass(PrayerTimes, [{
+      key: "timeForPrayer",
+      value: function timeForPrayer(prayer) {
+        if (prayer === Prayer.Fajr) {
+          return this.fajr;
+        } else if (prayer === Prayer.Sunrise) {
+          return this.sunrise;
+        } else if (prayer === Prayer.Dhuhr) {
+          return this.dhuhr;
+        } else if (prayer === Prayer.Asr) {
+          return this.asr;
+        } else if (prayer === Prayer.Maghrib) {
+          return this.maghrib;
+        } else if (prayer === Prayer.Isha) {
+          return this.isha;
+        } else {
+          return null;
+        }
+      }
+    }, {
+      key: "currentPrayer",
+      value: function currentPrayer() {
+        var date = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Date();
+
+        if (date >= this.isha) {
+          return Prayer.Isha;
+        } else if (date >= this.maghrib) {
+          return Prayer.Maghrib;
+        } else if (date >= this.asr) {
+          return Prayer.Asr;
+        } else if (date >= this.dhuhr) {
+          return Prayer.Dhuhr;
+        } else if (date >= this.sunrise) {
+          return Prayer.Sunrise;
+        } else if (date >= this.fajr) {
+          return Prayer.Fajr;
+        } else {
+          return Prayer.None;
+        }
+      }
+    }, {
+      key: "nextPrayer",
+      value: function nextPrayer() {
+        var date = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new Date();
+
+        if (date >= this.isha) {
+          return Prayer.None;
+        } else if (date >= this.maghrib) {
+          return Prayer.Isha;
+        } else if (date >= this.asr) {
+          return Prayer.Maghrib;
+        } else if (date >= this.dhuhr) {
+          return Prayer.Asr;
+        } else if (date >= this.sunrise) {
+          return Prayer.Dhuhr;
+        } else if (date >= this.fajr) {
+          return Prayer.Sunrise;
+        } else {
+          return Prayer.Fajr;
+        }
+      }
+    }]);
+
+    return PrayerTimes;
+  }();
+
+  function qibla(coordinates) {
+    var makkah = new Coordinates(21.4225241, 39.8261818); // Equation from "Spherical Trigonometry For the use of colleges and schools" page 50
+
+    var term1 = Math.sin(degreesToRadians(makkah.longitude) - degreesToRadians(coordinates.longitude));
+    var term2 = Math.cos(degreesToRadians(coordinates.latitude)) * Math.tan(degreesToRadians(makkah.latitude));
+    var term3 = Math.sin(degreesToRadians(coordinates.latitude)) * Math.cos(degreesToRadians(makkah.longitude) - degreesToRadians(coordinates.longitude));
+    var angle = Math.atan2(term1, term2 - term3);
+    return unwindAngle(radiansToDegrees(angle));
+  }
+
+  var SunnahTimes = /*#__PURE__*/_createClass(function SunnahTimes(prayerTimes) {
+    _classCallCheck(this, SunnahTimes);
+
+    var date = prayerTimes.date;
+    var nextDay = dateByAddingDays(date, 1);
+    var nextDayPrayerTimes = new PrayerTimes(prayerTimes.coordinates, nextDay, prayerTimes.calculationParameters);
+    var nightDuration = (nextDayPrayerTimes.fajr.getTime() - prayerTimes.maghrib.getTime()) / 1000.0;
+    this.middleOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration / 2));
+    this.lastThirdOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (2 / 3)));
+  });
+
+  exports.CalculationMethod = CalculationMethod;
+  exports.CalculationParameters = CalculationParameters;
+  exports.Coordinates = Coordinates;
+  exports.HighLatitudeRule = HighLatitudeRule;
+  exports.Madhab = Madhab;
+  exports.PolarCircleResolution = PolarCircleResolution;
+  exports.Prayer = Prayer;
+  exports.PrayerTimes = PrayerTimes;
+  exports.Qibla = qibla;
+  exports.Rounding = Rounding;
+  exports.Shafaq = Shafaq;
+  exports.SunnahTimes = SunnahTimes;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
+
+}));
+  return module.exports;
+})();
+
+// ═══════════════════════════════════════════════════════
+//  AyatmilPrayer — Phase 2: গণনা ইঞ্জিন, লোকেশন ও সেটিংস
+//                   Phase 3: পাঁচ ওয়াক্তের সময়রেখা, লাইভ কাউন্টডাউন, প্রগ্রেস বার
+//                   Phase 4: নফল (তাহাজ্জুদ, ইশরাক, চাশত, আওয়াবিন) ও মাকরুহ সময় (সূর্যোদয়, ইস্তিওয়া, সূর্যাস্ত)
+//                   Phase 5: সরল UI; মসজিদ ও জামাতের সময় (ব্যবহারকারীর নিজের দেওয়া) ও জামাত কাউন্টডাউন
+//                   Phase 6: ইংরেজি, বাংলা (বঙ্গাব্দ) ও হিজরি তারিখ (হিজরিতে ±১ দিন সমন্বয়)
+//  • সব গণনা অফলাইনে, adhan-js (ইনলাইন) দিয়ে — কোনো CDN/API নেই
+//  • একমাত্র গ্লোবাল নাম: window.AyatmilPrayer
+// ═══════════════════════════════════════════════════════
+window.AyatmilPrayer = (function (Adhan) {
+  'use strict';
+
+  const STORE_KEY = 'ayatmil.prayer.v1';
+  const DHAKA_TZ  = 'Asia/Dhaka';
+  const ENGINE_ID = 'adhan-js 4.4.3 (MIT)';
+
+  // ── ডিফল্ট: কারাচি পদ্ধতি + হানাফি আসর ──
+  const DEFAULT_LOCATION = { lat: 23.8103, lng: 90.4125, name: 'ঢাকা', source: 'default' };
+  const DEFAULT_SETTINGS = {
+    method: 'Karachi', fajrAngle: 18, ishaAngle: 18, ishaInterval: 0,
+    asr: 'hanafi', highLat: 'auto', tzMode: 'dhaka',
+    adjustments: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
+    hijriAdjust: 0,   // Phase 6: চাঁদ দেখার কারণে হিজরি তারিখ −১ / ০ / +১ দিন
+    // Phase 4 — আনুমানিক সতর্কতামূলক মান; সবই সেটিংসে পরিবর্তনযোগ্য
+    makruh: { sunriseMin: 20, sunsetMin: 20, istiwaBeforeMin: 5 },
+    nafl: { duhaMode: 'separate', chashtMode: 'quarter', chashtMinutes: 120, dayDef: 'sun',
+            awwabinEnd: 'isha', awwabinMinutes: 60, nightDef: 'maghribFajr' }
+  };
+
+  const METHOD_LABELS = {
+    Karachi: 'কারাচি (ফজর ১৮°, ইশা ১৮°) — ডিফল্ট',
+    MuslimWorldLeague: 'মুসলিম ওয়ার্ল্ড লীগ',
+    Egyptian: 'মিশরীয় জেনারেল অথরিটি',
+    UmmAlQura: 'উম্মুল কুরা (মক্কা)',
+    Dubai: 'দুবাই',
+    Qatar: 'কাতার',
+    Kuwait: 'কুয়েত',
+    Singapore: 'সিঙ্গাপুর / মালয়েশিয়া / ইন্দোনেশিয়া',
+    MoonsightingCommittee: 'মুনসাইটিং কমিটি',
+    NorthAmerica: 'উত্তর আমেরিকা (ISNA)',
+    Turkey: 'তুরস্ক (দিয়ানেত)',
+    Tehran: 'তেহরান',
+    Other: 'কাস্টম (নিজের কোণ দিন)'
+  };
+  const METHOD_KEYS = Object.keys(METHOD_LABELS).filter(k => typeof Adhan.CalculationMethod[k] === 'function');
+
+  const HIGHLAT_KEYS = ['auto', 'middle', 'seventh', 'twilight'];
+  const PRAYER_KEYS  = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+  function methodPreset(name) {
+    const p = Adhan.CalculationMethod[name]();
+    return { fajrAngle: p.fajrAngle, ishaAngle: p.ishaAngle, ishaInterval: p.ishaInterval };
+  }
+
+  // ───────── সংখ্যা/তারিখ সহায়ক ─────────
+  function toAscii(s) {
+    return String(s == null ? '' : s)
+      .replace(/[০-৯]/g, d => String('০১২৩৪৫৬৭৮৯'.indexOf(d)))
+      .replace(/[−–—]/g, '-').replace(/[٫,]/g, '.').trim();
+  }
+  function num(v, fallback) {
+    const n = Number(toAscii(v));
+    return (toAscii(v) !== '' && isFinite(n)) ? n : fallback;
+  }
+  function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function ymdKey(y) { return y.y + '-' + pad2(y.m) + '-' + pad2(y.d); }
+
+  // ───────── সময় অঞ্চল ─────────
+  function resolveTz(settings) {
+    if (settings.tzMode === 'device') {
+      try { return Intl.DateTimeFormat().resolvedOptions().timeZone || DHAKA_TZ; } catch (e) { return DHAKA_TZ; }
+    }
+    return DHAKA_TZ;
+  }
+  // একটি মুহূর্ত (Date) নির্দিষ্ট সময় অঞ্চলে কোন তারিখ?
+  function ymdInTz(date, tz) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' })
+        .formatToParts(date);
+      const get = t => Number(parts.find(p => p.type === t).value);
+      return { y: get('year'), m: get('month'), d: get('day') };
+    } catch (e) {
+      if (tz === DHAKA_TZ) {            // Intl না থাকলে: বাংলাদেশ = UTC+6, DST নেই
+        const x = new Date(date.getTime() + 6 * 3600 * 1000);
+        return { y: x.getUTCFullYear(), m: x.getUTCMonth() + 1, d: x.getUTCDate() };
+      }
+      return { y: date.getFullYear(), m: date.getMonth() + 1, d: date.getDate() };
+    }
+  }
+  function addDays(ymd, n) {
+    const x = new Date(Date.UTC(ymd.y, ymd.m - 1, ymd.d + n));
+    return { y: x.getUTCFullYear(), m: x.getUTCMonth() + 1, d: x.getUTCDate() };
+  }
+  function parseYmd(str) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(toAscii(str));
+    if (!m) return null;
+    const y = { y: +m[1], m: +m[2], d: +m[3] };
+    if (y.y < 1900 || y.y > 2100) return null;
+    const chk = new Date(Date.UTC(y.y, y.m - 1, y.d));
+    return (chk.getUTCMonth() + 1 === y.m && chk.getUTCDate() === y.d) ? y : null;
+  }
+
+  // ───────── যাচাই/স্যানিটাইজ ─────────
+  function sanitizeLocation(raw) {
+    const r = raw && typeof raw === 'object' ? raw : {};
+    const lat = num(r.lat, NaN), lng = num(r.lng, NaN);
+    if (!(lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180)) return { ...DEFAULT_LOCATION };
+    const source = ['default', 'gps', 'manual'].includes(r.source) ? r.source : 'manual';
+    const name = (typeof r.name === 'string' ? r.name.trim().slice(0, 60) : '') ||
+                 (source === 'gps' ? 'জিপিএস লোকেশন' : 'নিজের লোকেশন');
+    return { lat, lng, name, source };
+  }
+  function sanitizeSettings(raw) {
+    const r = raw && typeof raw === 'object' ? raw : {};
+    const D = DEFAULT_SETTINGS;
+    const method = METHOD_KEYS.includes(r.method) ? r.method : D.method;
+    const preset = methodPreset(method);
+    const hasAngles = method !== 'Other' ? preset : { fajrAngle: D.fajrAngle, ishaAngle: D.ishaAngle, ishaInterval: 0 };
+    const s = {
+      method,
+      fajrAngle:    clamp(num(r.fajrAngle, hasAngles.fajrAngle), 0, 30),
+      ishaAngle:    clamp(num(r.ishaAngle, hasAngles.ishaAngle), 0, 30),
+      ishaInterval: Math.round(clamp(num(r.ishaInterval, hasAngles.ishaInterval), 0, 180)),
+      asr:      ['hanafi', 'shafi'].includes(r.asr) ? r.asr : D.asr,
+      highLat:  HIGHLAT_KEYS.includes(r.highLat) ? r.highLat : D.highLat,
+      tzMode:   ['dhaka', 'device'].includes(r.tzMode) ? r.tzMode : D.tzMode,
+      adjustments: {}
+    };
+    const ra = r.adjustments && typeof r.adjustments === 'object' ? r.adjustments : {};
+    PRAYER_KEYS.forEach(k => { s.adjustments[k] = Math.round(clamp(num(ra[k], 0), -60, 60)); });
+    const rm = r.makruh && typeof r.makruh === 'object' ? r.makruh : {};
+    const rn = r.nafl && typeof r.nafl === 'object' ? r.nafl : {};
+    const iin = (v, lo, hi, def) => Math.round(clamp(num(v, def), lo, hi));
+    s.makruh = {
+      sunriseMin:      iin(rm.sunriseMin,      10, 30, D.makruh.sunriseMin),
+      sunsetMin:       iin(rm.sunsetMin,       10, 30, D.makruh.sunsetMin),
+      istiwaBeforeMin: iin(rm.istiwaBeforeMin,  0, 10, D.makruh.istiwaBeforeMin)
+    };
+    s.nafl = {
+      duhaMode:       ['separate', 'combined'].includes(rn.duhaMode) ? rn.duhaMode : D.nafl.duhaMode,
+      chashtMode:     ['quarter', 'minutes'].includes(rn.chashtMode) ? rn.chashtMode : D.nafl.chashtMode,
+      chashtMinutes:  iin(rn.chashtMinutes, 30, 240, D.nafl.chashtMinutes),
+      dayDef:         ['sun', 'fajrMaghrib'].includes(rn.dayDef) ? rn.dayDef : D.nafl.dayDef,
+      awwabinEnd:     ['isha', 'minutes'].includes(rn.awwabinEnd) ? rn.awwabinEnd : D.nafl.awwabinEnd,
+      awwabinMinutes: iin(rn.awwabinMinutes, 15, 180, D.nafl.awwabinMinutes),
+      nightDef:       ['maghribFajr', 'sunsetSunrise'].includes(rn.nightDef) ? rn.nightDef : D.nafl.nightDef
+    };
+    s.hijriAdjust = Math.round(clamp(num(r.hijriAdjust, 0), -1, 1));
+    return s;
+  }
+
+  // ───────── সংরক্ষণ (localStorage; না পেলে মেমরি) ─────────
+  let memoryCopy = null;
+  function loadState() {
+    let j = null;
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      if (raw) j = JSON.parse(raw);
+    } catch (e) { j = memoryCopy; }
+    if (!j || j.version !== 1) j = memoryCopy && memoryCopy.version === 1 ? memoryCopy : null;
+    return {
+      location: sanitizeLocation(j && j.location),
+      settings: sanitizeSettings(j && j.settings)
+    };
+  }
+  let state = loadState();
+  let stateVersion = 0;
+  function persist() {
+    const payload = { version: 1, location: state.location, settings: state.settings, savedAt: Date.now() };
+    memoryCopy = payload;
+    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(payload)); return true; }
+    catch (e) { return false; }
+  }
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  function getState() { return clone(state); }
+  function setLocation(loc) { state.location = sanitizeLocation(loc); stateVersion++; return { ok: persist(), location: getState().location }; }
+  function setSettings(s)  { state.settings = sanitizeSettings(s); stateVersion++; return { ok: persist(), settings: getState().settings }; }
+  function resetSettings() { state.settings = sanitizeSettings(DEFAULT_SETTINGS); stateVersion++; return { ok: persist(), settings: getState().settings }; }
+
+  // ───────── গণনা ইঞ্জিন ─────────
+  function buildParams(s, coords) {
+    const p = Adhan.CalculationMethod[s.method]();
+    if (s.method !== 'MoonsightingCommittee') {         // মুনসাইটিং নিজস্ব মৌসুমি সূত্র ব্যবহার করে
+      p.fajrAngle = s.fajrAngle;
+      if (s.ishaInterval > 0) { p.ishaInterval = s.ishaInterval; }
+      else { p.ishaInterval = 0; p.ishaAngle = s.ishaAngle; }
+    }
+    p.madhab = (s.asr === 'hanafi') ? Adhan.Madhab.Hanafi : Adhan.Madhab.Shafi;
+    const HL = Adhan.HighLatitudeRule;
+    p.highLatitudeRule = s.highLat === 'middle'  ? HL.MiddleOfTheNight
+                       : s.highLat === 'seventh' ? HL.SeventhOfTheNight
+                       : s.highLat === 'twilight'? HL.TwilightAngle
+                       : HL.recommended(coords);
+    p.adjustments = { ...s.adjustments };
+    return p;
+  }
+
+  // ymd = {y,m,d} (নির্বাচিত সময় অঞ্চলের তারিখ)। ফলাফল: পরম মুহূর্ত (Date) — ডিভাইসের সময় অঞ্চল নির্ভর নয়।
+  function compute(ymd, loc, settings) {
+    const L = sanitizeLocation(loc || state.location);
+    const S = sanitizeSettings(settings || state.settings);
+    const coords = new Adhan.Coordinates(L.lat, L.lng);
+    const params = buildParams(S, coords);
+    // adhan শুধু তারিখের বছর/মাস/দিন ব্যবহার করে; দুপুর ১২টা ধরলে DST-জনিত তারিখ-সরণ হয় না।
+    const pt = new Adhan.PrayerTimes(coords, new Date(ymd.y, ymd.m - 1, ymd.d, 12, 0, 0), params);
+    const times = { fajr: pt.fajr, sunrise: pt.sunrise, dhuhr: pt.dhuhr, asr: pt.asr,
+                    sunset: pt.sunset, maghrib: pt.maghrib, isha: pt.isha };
+    const valid = Object.keys(times).every(k => times[k] instanceof Date && isFinite(times[k].getTime()));
+    return {
+      ymd: { ...ymd }, dateKey: ymdKey(ymd), tz: resolveTz(S), times, valid,
+      location: L, settings: S,
+      params: { method: S.method, fajrAngle: params.fajrAngle, ishaAngle: params.ishaAngle,
+                ishaInterval: params.ishaInterval, maghribAngle: params.maghribAngle || 0,
+                madhab: params.madhab, highLatitudeRule: params.highLatitudeRule,
+                methodAdjustments: { ...params.methodAdjustments }, adjustments: { ...params.adjustments },
+                rounding: params.rounding },
+      engine: ENGINE_ID
+    };
+  }
+  function todayYMD(settings) { return ymdInTz(new Date(), resolveTz(sanitizeSettings(settings || state.settings))); }
+
+
+
+  // ═══════════ Phase 4: সৌর মধ্যাহ্ন (T0), নফল ও মাকরুহ উইন্ডো ═══════════
+  // T0 = প্রকৃত সৌর মধ্যাহ্ন (সূর্য মধ্যগগনে)। adhan-এর "Other" পদ্ধতিতে কোনো পদ্ধতি-সমন্বয় (যেমন দুবাইয়ের +৩)
+  // থাকে না, তাই dhuhr = শুধু সৌর transit (নিকটতম মিনিটে রাউন্ড)। ব্যবহারকারীর যোহর-সমন্বয় এতে প্রযোজ্য নয়।
+  function solarNoonMs(ymd, loc) {
+    const L = sanitizeLocation(loc || state.location);
+    const coords = new Adhan.Coordinates(L.lat, L.lng);
+    return new Adhan.PrayerTimes(coords, new Date(ymd.y, ymd.m - 1, ymd.d, 12, 0, 0), Adhan.CalculationMethod.Other()).dhuhr.getTime();
+  }
+  const MIN = 60000;
+  const roundMin = ms => Math.round(ms / MIN) * MIN;
+
+  // একটি দিনের সব নফল ও মাকরুহ উইন্ডো। সব সীমা Phase 3-এর একই টাইমস্ট্যাম্প থেকে আসে।
+  //   মাকরুহ সূর্যোদয় : সূর্যোদয় (= ফজরের শেষ)        → সূর্যোদয় + N মিনিট
+  //   ইশরাক           : সূর্যোদয় মাকরুহ শেষ            → চাশতের শুরু
+  //   চাশত            : দিনের ¼ পার (বা N মিনিট)         → ইস্তিওয়া মাকরুহ শুরু
+  //   মাকরুহ ইস্তিওয়া : T0 − B মিনিট                    → যোহরের শুরু (≥ T0)
+  //   মাকরুহ সূর্যাস্ত : সূর্যাস্ত − N মিনিট              → সূর্যাস্ত (= আসরের শেষ)
+  //   আওয়াবিন         : মাগরিব শুরু                    → ইশা শুরু (বা মাগরিব + N)
+  //   তাহাজ্জুদ        : ইশা শুরু                       → পরদিন ফজর শুরু; শেষ ১/৩ আলাদা
+  function buildDayWindows(ctx, nxt, S, warn) {
+    const t = ctx.c.times, dk = ctx.c.dateKey, mk = S.makruh, nf = S.nafl;
+    const sunrise = t.sunrise.getTime(), sunset = t.sunset.getTime(), fajr = t.fajr.getTime(), asr = t.asr.getTime();
+    const maghrib = t.maghrib.getTime(), isha = t.isha.getTime();
+    const dhuhrStart = Math.max(t.dhuhr.getTime(), ctx.t0);
+    const nextFajr = nxt.c.times.fajr.getTime(), nextSunrise = nxt.c.times.sunrise.getTime();
+    const W = [];
+    const add = (id, group, s, e) => { if (e > s) W.push({ id, group, dayKey: dk, start: s, end: e }); else warn.push('empty:' + id); };
+
+    const istiwaStart = ctx.t0 - mk.istiwaBeforeMin * MIN, istiwaEnd = dhuhrStart;
+    let srEnd = sunrise + mk.sunriseMin * MIN;
+    if (srEnd > istiwaStart) { srEnd = istiwaStart; warn.push('clamp:mk_sunrise'); }
+    let ssStart = sunset - mk.sunsetMin * MIN;
+    if (ssStart < asr) { ssStart = asr; warn.push('clamp:mk_sunset'); }
+    add('mk_sunrise', 'makruh', sunrise, srEnd);
+    add('mk_istiwa',  'makruh', istiwaStart, istiwaEnd);
+    add('mk_sunset',  'makruh', ssStart, sunset);
+
+    let chashtStart;
+    if (nf.chashtMode === 'minutes') chashtStart = sunrise + nf.chashtMinutes * MIN;
+    else {
+      const ds = nf.dayDef === 'fajrMaghrib' ? fajr : sunrise, de = nf.dayDef === 'fajrMaghrib' ? maghrib : sunset;
+      chashtStart = roundMin(ds + (de - ds) / 4);
+    }
+    const raw = chashtStart;
+    chashtStart = clamp(chashtStart, srEnd, istiwaStart);
+    if (chashtStart !== raw) warn.push('clamp:chasht');
+    if (nf.duhaMode === 'combined') add('duha', 'nafl', srEnd, istiwaStart);
+    else { add('ishraq', 'nafl', srEnd, chashtStart); add('chasht', 'nafl', chashtStart, istiwaStart); }
+
+    add('awwabin', 'nafl', maghrib, nf.awwabinEnd === 'minutes' ? Math.min(isha, maghrib + nf.awwabinMinutes * MIN) : isha);
+
+    add('tahajjud', 'nafl', isha, nextFajr);
+    const nS = nf.nightDef === 'sunsetSunrise' ? sunset : maghrib;
+    const nE = nf.nightDef === 'sunsetSunrise' ? nextSunrise : nextFajr;
+    const l3 = Math.max(roundMin(nS + (nE - nS) * 2 / 3), isha);
+    if (l3 < nextFajr) add('lastthird', 'nafl', l3, nextFajr);
+    return W;
+  }
+
+  // নির্দিষ্ট id-র উইন্ডোর অবস্থা: চলমান / পরবর্তী / আগের
+  function windowStatus(plan, id, nowMs) {
+    let cur = null, next = null, prev = null;
+    for (const w of (plan.windows || [])) {
+      if (w.id !== id) continue;
+      if (nowMs >= w.start && nowMs < w.end) cur = w;
+      else if (w.start > nowMs) { if (!next || w.start < next.start) next = w; }
+      else if (!prev || w.end > prev.end) prev = w;
+    }
+    return { cur, next, prev };
+  }
+  const MAKRUH_IDS = ['mk_sunrise', 'mk_istiwa', 'mk_sunset'];
+  function makruhSummary(plan, nowMs) {
+    let cur = null, next = null;
+    for (const w of (plan.windows || [])) {
+      if (w.group !== 'makruh') continue;
+      if (nowMs >= w.start && nowMs < w.end) cur = w;
+      else if (w.start > nowMs && (!next || w.start < next.start)) next = w;
+    }
+    return { cur, next };
+  }
+
+  // ═══════════ Phase 3: ফরজ ওয়াক্তের সময়রেখা ═══════════
+  // সংজ্ঞা (সবই Phase 2 ইঞ্জিনের সময় থেকে; কোনো হার্ডকোড সময় নেই):
+  //   ফজর    : ফজর শুরু        → সূর্যোদয়
+  //   যোহর   : যোহর শুরু        → আসর শুরু (আসরের হিসাব সেটিংস অনুযায়ী; ডিফল্ট হানাফি)
+  //   আসর    : আসর শুরু        → সূর্যাস্ত
+  //   মাগরিব : মাগরিব শুরু      → ইশা শুরু
+  //   ইশা    : ইশা শুরু        → পরদিনের ফজর শুরু
+  // সূর্যোদয় থেকে যোহর শুরু পর্যন্ত কোনো ফরজ ওয়াক্ত নেই ("gap")। মিনিট-সমন্বয়ের কারণে
+  // অন্য জায়গায় (যেমন সূর্যাস্ত → মাগরিব) ফাঁক বা ওভারল্যাপ হলেও একইভাবে সামলানো হয়।
+  const WAQT = [
+    { key: 'fajr',    bn: 'ফজর',    en: 'Fajr',    gen: 'ফজরের' },
+    { key: 'dhuhr',   bn: 'যোহর',   en: 'Dhuhr',   gen: 'যোহরের' },
+    { key: 'asr',     bn: 'আসর',    en: 'Asr',     gen: 'আসরের' },
+    { key: 'maghrib', bn: 'মাগরিব', en: 'Maghrib', gen: 'মাগরিবের' },
+    { key: 'isha',    bn: 'ইশা',    en: 'Isha',    gen: 'ইশার' }
+  ];
+  const WAQT_BY_KEY = {}; WAQT.forEach(w => { WAQT_BY_KEY[w.key] = w; });
+
+  // ymd = আজকের তারিখ (নির্বাচিত সময় অঞ্চলে)। গতকাল ইশা আজ ভোরের ফজর পর্যন্ত চলে, তাই d-1 থেকে d+1 পর্যন্ত বানানো হয়।
+  function buildPlan(ymd, loc, settings) {
+    const L = sanitizeLocation(loc || state.location);
+    const S = sanitizeSettings(settings || state.settings);
+    const days = [-1, 0, 1, 2].map(i => compute(addDays(ymd, i), L, S));
+    const t0s = [-1, 0, 1, 2].map(i => solarNoonMs(addDays(ymd, i), L));
+    const warnings = [];
+    let periods = [];
+    for (let i = 0; i < 3; i++) {
+      const t = days[i].times, nextFajr = days[i + 1].times.fajr;
+      // যোহর কখনো প্রকৃত সৌর মধ্যাহ্ন (T0)-র আগে শুরু হয় না: ঋণাত্মক সমন্বয় হলেও ইস্তিওয়ার মাকরুহ সময়ের সাথে ওভারল্যাপ হবে না
+      const dhuhrStart = Math.max(t.dhuhr.getTime(), t0s[i]);
+      if (dhuhrStart !== t.dhuhr.getTime() && i === 1) warnings.push('clamp:dhuhr');
+      [['fajr', t.fajr, t.sunrise], ['dhuhr', new Date(dhuhrStart), t.asr], ['asr', t.asr, t.sunset],
+       ['maghrib', t.maghrib, t.isha], ['isha', t.isha, nextFajr]].forEach(([key, s, e]) =>
+        periods.push({ key, dayKey: days[i].dateKey, start: s.getTime(), end: e.getTime() }));
+    }
+    const tz = days[1].tz;
+    if (periods.some(p => !isFinite(p.start) || !isFinite(p.end))) {
+      return { valid: false, ymd: { ...ymd }, dateKey: ymdKey(ymd), tz, periods: [], windows: [], today: days[1], warnings: ['এই অক্ষাংশে কিছু সময় নির্ণয় করা যায়নি'] };
+    }
+    periods.sort((a, b) => a.start - b.start);
+    for (let j = 0; j + 1 < periods.length; j++) {            // ওভারল্যাপ ছাঁটাই
+      if (periods[j].end > periods[j + 1].start) { periods[j].end = periods[j + 1].start; warnings.push('overlap:' + periods[j].key); }
+    }
+    const kept = [];
+    periods.forEach(p => { if (p.end > p.start) kept.push(p); else warnings.push('empty:' + p.key); });
+    const windows = [];
+    for (let i = 0; i < 3; i++) buildDayWindows({ c: days[i], t0: t0s[i] }, { c: days[i + 1], t0: t0s[i + 1] }, S, warnings)
+      .forEach(w => windows.push(w));
+    windows.sort((a, b) => a.start - b.start);
+    return { valid: true, ymd: { ...ymd }, dateKey: ymdKey(ymd), tz, periods: kept, windows, t0: t0s[1], today: days[1], warnings };
+  }
+
+  // নির্দিষ্ট মুহূর্তে (epoch ms) অবস্থা: চলমান ওয়াক্ত, না থাকলে ফাঁক; পরবর্তী ওয়াক্ত; অবশিষ্ট সময়; অগ্রগতি।
+  function timelineAt(plan, nowMs) {
+    const P = plan.periods;
+    if (!plan.valid || !P.length) return { state: 'none', now: nowMs };
+    let idx = -1;
+    for (let i = P.length - 1; i >= 0; i--) { if (nowMs >= P[i].start && nowMs < P[i].end) { idx = i; break; } }
+    if (idx >= 0) {
+      const cur = P[idx], total = cur.end - cur.start;
+      return { state: 'waqt', now: nowMs, current: cur, next: P[idx + 1] || null,
+               remainingMs: cur.end - nowMs, elapsedMs: nowMs - cur.start, totalMs: total,
+               progress: clamp((nowMs - cur.start) / total, 0, 1) };
+    }
+    let prev = null, next = null;
+    for (const p of P) { if (p.end <= nowMs) prev = p; else if (p.start > nowMs && !next) next = p; }
+    if (!next) return { state: 'none', now: nowMs };
+    const gapStart = prev ? prev.end : null, total = gapStart != null ? next.start - gapStart : 0;
+    return { state: 'gap', now: nowMs, previous: prev, next, gapStart, gapEnd: next.start,
+             remainingMs: next.start - nowMs, totalMs: total,
+             progress: total > 0 ? clamp((nowMs - gapStart) / total, 0, 1) : 0,
+             kind: (prev && prev.key === 'fajr') ? 'sunrise' : 'between' };
+  }
+  function timeline(nowMs, loc, settings) {
+    const S = sanitizeSettings(settings || state.settings);
+    const ymd = ymdInTz(new Date(nowMs), resolveTz(S));
+    const plan = buildPlan(ymd, loc, S);
+    return { plan, tl: timelineAt(plan, nowMs) };
+  }
+  // অবশিষ্ট সময় → ঘণ্টা/মিনিট/সেকেন্ড (উপরের দিকে রাউন্ড: শেষ মুহূর্তের আগে "০" দেখায় না)
+  function splitDuration(ms) {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    return { h: Math.floor(total / 3600), m: Math.floor((total % 3600) / 60), s: total % 60, totalSeconds: total };
+  }
+  function dayDiff(a, b) { return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86400000); }
+
+
+  // ═══════════ Phase 5: মসজিদ ও জামাতের সময় (ডেটা স্তর) ═══════════
+  // জামাতের সময় সম্পূর্ণ ব্যবহারকারীর দেওয়া; অ্যাপ কোনো মসজিদের সময় অনুমান করে না। নতুন মসজিদের সব সময় খালি থাকে।
+  // মসজিদের সংখ্যায় কোনো সীমা নেই। আলাদা কী-তে সংরক্ষিত, তাই নামাজ-সেটিংসের সাথে মিশে যায় না।
+  const MOSQUE_KEY = 'ayatmil.mosques.v1';
+  const JAMAAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+  const HM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+  let idSeq = 0;
+  const newId = () => 'm' + Date.now().toString(36) + (++idSeq).toString(36);
+
+  function sanitizeMosques(j) {
+    const out = { mosques: [], selectedId: null };
+    const seen = new Set();
+    if (j && Array.isArray(j.mosques)) {
+      for (const m of j.mosques) {
+        if (!m || typeof m !== 'object') continue;
+        const name = String(m.name == null ? '' : m.name).trim().slice(0, 60);
+        if (!name) continue;
+        let id = (typeof m.id === 'string' && /^[\w-]{1,40}$/.test(m.id)) ? m.id : null;
+        if (!id || seen.has(id)) id = newId();
+        seen.add(id);
+        const jamaat = {};
+        JAMAAT_KEYS.forEach(k => { const v = m.jamaat && m.jamaat[k]; jamaat[k] = (typeof v === 'string' && HM_RE.test(v)) ? v : ''; });
+        out.mosques.push({ id, name, jamaat });
+      }
+    }
+    const sid = j && j.selectedId;
+    out.selectedId = out.mosques.some(x => x.id === sid) ? sid : (out.mosques[0] ? out.mosques[0].id : null);
+    return out;
+  }
+  let mosqueMemory = null;
+  function loadMosques() {
+    let j = null;
+    try { const raw = window.localStorage.getItem(MOSQUE_KEY); if (raw) j = JSON.parse(raw); } catch (e) { j = mosqueMemory; }
+    if (!j || j.version !== 1) j = (mosqueMemory && mosqueMemory.version === 1) ? mosqueMemory : null;
+    return sanitizeMosques(j);
+  }
+  let mosqueState = loadMosques();
+  function persistMosques() {
+    const payload = { version: 1, mosques: mosqueState.mosques, selectedId: mosqueState.selectedId, savedAt: Date.now() };
+    mosqueMemory = payload;
+    try { window.localStorage.setItem(MOSQUE_KEY, JSON.stringify(payload)); return true; } catch (e) { return false; }
+  }
+  const findMosque = id => mosqueState.mosques.find(x => x.id === id) || null;
+  const selectedMosque = () => findMosque(mosqueState.selectedId);
+  const cleanName = n => String(n == null ? '' : n).trim().slice(0, 60);
+
+  function addMosque(name) {
+    const nm = cleanName(name);
+    if (!nm) return { ok: false, error: 'empty' };
+    const jamaat = {}; JAMAAT_KEYS.forEach(k => { jamaat[k] = ''; });
+    const m = { id: newId(), name: nm, jamaat };
+    mosqueState.mosques.push(m); mosqueState.selectedId = m.id;
+    return { ok: true, saved: persistMosques(), id: m.id };
+  }
+  function renameMosque(id, name) {
+    const m = findMosque(id), nm = cleanName(name);
+    if (!m) return { ok: false, error: 'missing' };
+    if (!nm) return { ok: false, error: 'empty' };
+    m.name = nm; return { ok: true, saved: persistMosques() };
+  }
+  function removeMosque(id) {
+    const i = mosqueState.mosques.findIndex(x => x.id === id);
+    if (i < 0) return { ok: false, error: 'missing' };
+    mosqueState.mosques.splice(i, 1);
+    if (mosqueState.selectedId === id) mosqueState.selectedId = mosqueState.mosques[Math.min(i, mosqueState.mosques.length - 1)] ? mosqueState.mosques[Math.min(i, mosqueState.mosques.length - 1)].id : null;
+    return { ok: true, saved: persistMosques() };
+  }
+  function selectMosque(id) {
+    if (!findMosque(id)) return { ok: false, error: 'missing' };
+    mosqueState.selectedId = id; return { ok: true, saved: persistMosques() };
+  }
+  function setJamaat(id, key, hhmm) {
+    const m = findMosque(id);
+    if (!m || JAMAAT_KEYS.indexOf(key) < 0) return { ok: false, error: 'missing' };
+    const v = String(hhmm == null ? '' : hhmm).trim();
+    if (v !== '' && !HM_RE.test(v)) return { ok: false, error: 'format' };
+    m.jamaat[key] = v; return { ok: true, saved: persistMosques() };
+  }
+
+  // নির্বাচিত সময় অঞ্চলে "HH:MM" → পরম মুহূর্ত (epoch ms)
+  function tzOffsetMs(tz, ms) {
+    try {
+      const p = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date(ms));
+      const g = t => Number(p.find(x => x.type === t).value);
+      return Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second')) - Math.floor(ms / 1000) * 1000;
+    } catch (e) { return tz === DHAKA_TZ ? 6 * 3600000 : -new Date(ms).getTimezoneOffset() * 60000; }
+  }
+  function zonedMs(ymd, hhmm, tz) {
+    const [h, mi] = hhmm.split(':').map(Number);
+    const guess = Date.UTC(ymd.y, ymd.m - 1, ymd.d, h, mi);
+    let t = guess - tzOffsetMs(tz, guess);
+    t = guess - tzOffsetMs(tz, t);
+    return t;
+  }
+
+  // জামাতের অবস্থা (ওয়াক্তের কাউন্টডাউন থেকে সম্পূর্ণ স্বাধীন; শুধু ওয়াক্তের সীমা পড়ে):
+  //   rows[k].state : upcoming (কাউন্টডাউন চলছে) | started (জামাত শুরু হয়েছে, ওয়াক্ত শেষ হয়নি) | past | none (সময় দেওয়া নেই)
+  //   next    : পরবর্তী জামাত (আজ শেষ হলে আগামীকালেরটি)
+  //   started : সর্বশেষ শুরু হওয়া জামাত, যার ওয়াক্ত এখনো চলছে (মধ্যরাতের পর গতকালের ইশাও ধরা হয়)
+  function jamaatStatus(plan, mosque, nowMs) {
+    const res = { rows: {}, next: null, started: null };
+    if (!plan || !plan.valid || !mosque) return res;
+    const evs = [];
+    [-1, 0, 1].forEach(off => {
+      const ymd = addDays(plan.ymd, off), dk = ymdKey(ymd);
+      JAMAAT_KEYS.forEach(k => {
+        const hm = mosque.jamaat[k]; if (!hm) return;
+        const per = plan.periods.find(p => p.key === k && p.dayKey === dk);
+        evs.push({ key: k, dayKey: dk, off, ts: zonedMs(ymd, hm, plan.tz), ws: per ? per.start : null, we: per ? per.end : null });
+      });
+    });
+    JAMAAT_KEYS.forEach(k => {
+      const e = evs.find(x => x.key === k && x.off === 0);
+      if (!e) { res.rows[k] = { state: 'none' }; return; }
+      const outside = e.ws != null && (e.ts < e.ws || e.ts >= e.we);
+      const state = nowMs < e.ts ? 'upcoming' : (e.we != null && nowMs < e.we ? 'started' : 'past');
+      res.rows[k] = { state, ts: e.ts, remainingMs: e.ts - nowMs, outside, waqtStart: e.ws, waqtEnd: e.we };
+    });
+    const up = evs.filter(e => e.ts > nowMs).sort((a, b) => a.ts - b.ts)[0];
+    if (up) res.next = { key: up.key, dayKey: up.dayKey, ts: up.ts, remainingMs: up.ts - nowMs };
+    const st = evs.filter(e => e.ts <= nowMs && e.we != null && nowMs < e.we).sort((a, b) => b.ts - a.ts)[0];
+    if (st) res.started = { key: st.key, dayKey: st.dayKey, ts: st.ts, waqtEnd: st.we };
+    return res;
+  }
+
+
+  // ═══════════ Phase 6: ইংরেজি, বাংলা (বঙ্গাব্দ) ও হিজরি তারিখ ═══════════
+  // সব তারিখ চলতি তারিখ (নির্বাচিত সময় অঞ্চলের) থেকে গণনা করা; কিছুই স্থায়ীভাবে বসানো নয়।
+  const EN_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function enDate(ymd) {
+    const w = new Date(Date.UTC(ymd.y, ymd.m - 1, ymd.d, 12)).getUTCDay();
+    return EN_DAYS[w] + ', ' + ymd.d + ' ' + EN_MONTHS[ymd.m - 1] + ' ' + ymd.y;
+  }
+
+  // বাংলাদেশের সংশোধিত বাংলা ক্যালেন্ডার (বাংলা একাডেমি, ২০১৯): বৈশাখ–আশ্বিন ৩১ দিন, কার্তিক–মাঘ ৩০,
+  // ফাল্গুন ২৯ (গ্রেগরিয়ান লিপ ইয়ারে ৩০), চৈত্র ৩০। প্রতিটি মাসের শুরু গ্রেগরিয়ান [মাস, দিন]-এ স্থির;
+  // ফলে ২১ ফেব্রুয়ারি = ৮ ফাল্গুন, ২৬ মার্চ = ১২ চৈত্র, ১৪ এপ্রিল = ১ বৈশাখ, ১৬ ডিসেম্বর = ১ পৌষ। দিন শুরু মধ্যরাতে।
+  const BN_MONTHS = ['বৈশাখ', 'জ্যৈষ্ঠ', 'আষাঢ়', 'শ্রাবণ', 'ভাদ্র', 'আশ্বিন', 'কার্তিক', 'অগ্রহায়ণ', 'পৌষ', 'মাঘ', 'ফাল্গুন', 'চৈত্র'];
+  const BN_STARTS = [[4, 14], [5, 15], [6, 15], [7, 16], [8, 16], [9, 16], [10, 17], [11, 16], [12, 16], [1, 15], [2, 14], [3, 15]];
+  function banglaFor(ymd) {
+    const t = Date.UTC(ymd.y, ymd.m - 1, ymd.d);
+    let best = null;
+    for (let yy = ymd.y - 1; yy <= ymd.y; yy++) {
+      BN_STARTS.forEach((s, i) => { const st = Date.UTC(yy, s[0] - 1, s[1]); if (st <= t && (!best || st > best.t)) best = { t: st, i }; });
+    }
+    if (!best) return null;
+    const year = (ymd.m > 4 || (ymd.m === 4 && ymd.d >= 14)) ? ymd.y - 593 : ymd.y - 594;
+    return { d: Math.round((t - best.t) / 86400000) + 1, m: best.i, y: year };
+  }
+
+  // হিজরি: ব্রাউজারের Intl (উম্মুল কুরা)। চাঁদ দেখার কারণে বাংলাদেশে ±১ দিন পার্থক্য হতে পারে, তাই adj (−১/০/+১)।
+  // ক্যালেন্ডার সমর্থিত না হলে অনুমান না করে null (তারিখ লুকানো থাকে)।
+  const HIJRI_MONTHS_BN = ['মুহাররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি', 'জমাদিউল আউয়াল', 'জমাদিউস সানি', 'রজব', 'শাবান', 'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'];
+  function hijriFor(ymd, adj) {
+    try {
+      const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { timeZone: 'UTC', year: 'numeric', month: 'numeric', day: 'numeric' });
+      if (fmt.resolvedOptions().calendar !== 'islamic-umalqura') return null;
+      const parts = fmt.formatToParts(new Date(Date.UTC(ymd.y, ymd.m - 1, ymd.d + (adj || 0), 12)));
+      const get = t => parseInt((parts.find(p => p.type === t) || {}).value, 10);
+      const y = get('year'), mo = get('month'), d = get('day');
+      return (y > 1000 && mo >= 1 && mo <= 12 && d >= 1 && d <= 30) ? { y, m: mo, d } : null;
+    } catch (e) { return null; }
+  }
+
+  // ───────── জিপিএস ─────────
+  function locateGPS() {
+    return new Promise((resolve, reject) => {
+      if (!('geolocation' in navigator)) { reject({ code: 'unsupported' }); return; }
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+        err => reject({ code: err.code === 1 ? 'denied' : err.code === 2 ? 'unavailable' : 'timeout', message: err.message }),
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60 * 1000 }
+      );
+    });
+  }
+
+  // ───────── সময় ফরম্যাট ─────────
+  function fmtTime(date, tz) {
+    if (!(date instanceof Date) || !isFinite(date.getTime())) return '—';
+    try {
+      return new Intl.DateTimeFormat('bn-BD', { timeZone: tz, hour: 'numeric', minute: '2-digit',
+        hour12: true, numberingSystem: 'beng' }).format(date);
+    } catch (e) {
+      return new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
+    }
+  }
+  function fmtTime24(date, tz) {
+    try { return new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(date); }
+    catch (e) { return '--:--'; }
+  }
+  function fmtDateBn(ymd, tz) {
+    try {
+      return new Intl.DateTimeFormat('bn-BD', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long',
+        year: 'numeric', numberingSystem: 'beng' }).format(new Date(Date.UTC(ymd.y, ymd.m - 1, ymd.d)));
+    } catch (e) { return ymdKey(ymd); }
+  }
+  function bn(n) { return String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]); }
+
+  // ═══════════ UI (Phase 2: লোকেশন, সেটিংস, ইঞ্জিন যাচাই) ═══════════
+  const CITIES = [
+    ['ঢাকা', 23.8103, 90.4125], ['চট্টগ্রাম', 22.3569, 91.7832], ['খুলনা', 22.8456, 89.5403],
+    ['রাজশাহী', 24.3745, 88.6042], ['সিলেট', 24.8949, 91.8687], ['বরিশাল', 22.7010, 90.3535],
+    ['রংপুর', 25.7439, 89.2752], ['ময়মনসিংহ', 24.7471, 90.4203]
+  ];
+  const ROWS = [
+    ['fajr', 'ফজর', 'Fajr'], ['sunrise', 'সূর্যোদয়', 'Sunrise'], ['dhuhr', 'যোহর', 'Dhuhr'],
+    ['asr', 'আসর', 'Asr'], ['maghrib', 'মাগরিব (সূর্যাস্ত)', 'Maghrib'], ['isha', 'ইশা', 'Isha']
+  ];
+  const HL_LABELS = { auto: 'স্বয়ংক্রিয় (অক্ষাংশ অনুযায়ী)', middle: 'রাতের মধ্যভাগ', seventh: 'রাতের এক-সপ্তমাংশ', twilight: 'গোধূলি কোণ অনুযায়ী' };
+
+  function $(root, sel) { return root.querySelector(sel); }
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function initUI() {
+    const root = document.getElementById('prayer-root');
+    if (!root) return;
+    const sel = (id, opts, cur) => `<select id="${id}" class="pt-input">` +
+      opts.map(([v, t]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${t}</option>`).join('') + '</select>';
+
+    root.innerHTML = `
+      <section class="pt-card pt-now" id="pt-now" aria-labelledby="pt-h-now">
+        <h3 id="pt-h-now" class="pt-sr">এখনকার ওয়াক্ত</h3>
+        <div class="pt-now-head"><span class="pt-dates"><span id="pt-now-date"></span><span class="pt-d-en" id="pt-d-en"></span><span class="pt-d-sub"><span id="pt-d-bn"></span><span class="pt-d-sep"> · </span><span id="pt-d-hj"></span> <button type="button" class="pt-link" id="pt-hj-toggle" aria-expanded="false" aria-controls="pt-hj-adj">সমন্বয়</button></span></span><span class="pt-now-locwrap"><span id="pt-now-loc"></span> <button type="button" class="pt-link" id="pt-loc-toggle" aria-expanded="false" aria-controls="pt-loc-card">লোকেশন বদলান</button></span></div>
+        <div class="pt-hj-adj" id="pt-hj-adj" role="radiogroup" aria-label="হিজরি তারিখ সমন্বয়" hidden><span class="pt-hj-l">হিজরি তারিখ:</span><button type="button" role="radio" class="pt-seg" data-adj="-1" aria-checked="false">−১ দিন</button><button type="button" role="radio" class="pt-seg" data-adj="0" aria-checked="false">সঠিক</button><button type="button" role="radio" class="pt-seg" data-adj="1" aria-checked="false">+১ দিন</button></div>
+        <div class="pt-now-state" id="pt-now-state"></div>
+        <div class="pt-now-name" id="pt-now-name">—</div>
+        <div class="pt-now-label" id="pt-now-label"></div>
+        <div class="pt-count" id="pt-count" role="timer" aria-live="off" data-remaining-ms=""></div>
+        <div class="pt-bar" id="pt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="চলমান ওয়াক্তের অগ্রগতি">
+          <div class="pt-bar-fill" id="pt-bar-fill"></div>
+        </div>
+        <div class="pt-bar-meta"><span id="pt-bar-start"></span><span id="pt-bar-pct"></span><span id="pt-bar-end"></span></div>
+        <div class="pt-next" id="pt-next"></div>
+        <div class="pt-note" id="pt-now-note"></div>
+      </section>
+      <div class="pt-strip" id="pt-strip" role="group" aria-label="সাহরি, ইশরাক ও ইফতারের সময়">
+        <div class="pt-tile"><span class="pt-tile-l">সাহরি শেষ</span><strong class="pt-tile-t" id="pt-t-sahri">—</strong><span class="pt-tile-s">ফজরের ওয়াক্ত শুরু</span></div>
+        <div class="pt-tile"><span class="pt-tile-l">ইশরাক</span><strong class="pt-tile-t" id="pt-t-ishraq">—</strong><span class="pt-tile-s" id="pt-t-ishraq-s">সূর্যোদয়ের পর</span></div>
+        <div class="pt-tile"><span class="pt-tile-l">ইফতার</span><strong class="pt-tile-t" id="pt-t-iftar">—</strong><span class="pt-tile-s">সূর্যাস্ত / মাগরিব শুরু</span></div>
+      </div>
+      <section class="pt-card" id="pt-loc-card" aria-labelledby="pt-h-loc" hidden>
+        <h3 id="pt-h-loc">লোকেশন</h3>
+        <div class="pt-loc" id="pt-loc-summary"></div>
+        <div class="pt-btnrow">
+          <button type="button" class="pt-btn pt-btn-primary" id="pt-gps">জিপিএস থেকে নিন</button>
+          <button type="button" class="pt-btn" id="pt-manual-toggle" aria-expanded="false" aria-controls="pt-manual">ম্যানুয়ালি সেট করুন</button>
+        </div>
+        <div class="pt-msg" id="pt-loc-msg" role="status" aria-live="polite"></div>
+        <div class="pt-manual" id="pt-manual" hidden>
+          <div class="pt-chips" id="pt-cities"></div>
+          <div class="pt-grid">
+            <label class="pt-field"><span>স্থানের নাম</span><input class="pt-input" id="pt-m-name" maxlength="60" placeholder="যেমন: খুলনা"></label>
+            <label class="pt-field"><span>অক্ষাংশ (Latitude)</span><input class="pt-input" id="pt-m-lat" inputmode="decimal" placeholder="যেমন: 22.8456"></label>
+            <label class="pt-field"><span>দ্রাঘিমাংশ (Longitude)</span><input class="pt-input" id="pt-m-lng" inputmode="decimal" placeholder="যেমন: 89.5403"></label>
+          </div>
+          <div class="pt-btnrow"><button type="button" class="pt-btn pt-btn-primary" id="pt-m-save">লোকেশন সংরক্ষণ</button></div>
+          <p class="pt-hint">শহরের বোতামগুলো শহরকেন্দ্রের আনুমানিক স্থানাঙ্ক। নিজের এলাকার সঠিক স্থানাঙ্ক দিলে সময় আরও নির্ভুল হয়।</p>
+        </div>
+      </section>
+      <section class="pt-card" aria-labelledby="pt-h-daily">
+        <h3 id="pt-h-daily">আজকের পাঁচ ওয়াক্ত</h3>
+        <table class="pt-table pt-waqt" id="pt-waqt-table">
+          <thead><tr><th scope="col">ওয়াক্ত</th><th scope="col" class="pt-r">শুরু</th><th scope="col" class="pt-r">শেষ</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <details class="pt-det"><summary>ওয়াক্ত কীভাবে নির্ধারিত?</summary><p class="pt-hint" id="pt-waqt-hint"></p></details>
+      </section>
+      <section class="pt-card pt-mq" id="pt-mq-card" aria-labelledby="pt-h-mq">
+        <div class="pt-mq-head"><h3 id="pt-h-mq">আমার এলাকার মসজিদ</h3><button type="button" class="pt-btn pt-btn-sm pt-btn-primary" id="pt-mq-add-btn" aria-expanded="false" aria-controls="pt-mq-addform">+ মসজিদ যোগ</button></div>
+        <div class="pt-mq-form" id="pt-mq-addform" hidden>
+          <input class="pt-input" id="pt-mq-new-name" maxlength="60" placeholder="মসজিদের নাম" aria-label="নতুন মসজিদের নাম" autocomplete="off">
+          <div class="pt-btnrow"><button type="button" class="pt-btn pt-btn-primary pt-btn-sm" id="pt-mq-add-save">যোগ করুন</button><button type="button" class="pt-btn pt-btn-sm" id="pt-mq-add-cancel">বাতিল</button></div>
+          <div class="pt-msg pt-msg-err" id="pt-mq-add-msg" role="status" aria-live="polite"></div>
+        </div>
+        <div class="pt-mq-chips" id="pt-mq-chips" role="group" aria-label="সংরক্ষিত মসজিদ"></div>
+        <p class="pt-hint pt-mq-empty" id="pt-mq-empty">এখনো কোনো মসজিদ যোগ করা হয়নি। মসজিদের নাম যোগ করে জামাতের সময় নিজে নির্ধারণ করুন।</p>
+        <div class="pt-mq-panel" id="pt-mq-panel" hidden>
+          <div class="pt-mq-title"><strong id="pt-mq-name"></strong>
+            <span class="pt-mq-acts"><button type="button" class="pt-btn pt-btn-sm" id="pt-mq-edit-btn">সম্পাদনা</button><button type="button" class="pt-btn pt-btn-sm pt-btn-danger" id="pt-mq-del-btn">মুছুন</button></span></div>
+          <div class="pt-mq-form" id="pt-mq-editform" hidden>
+            <input class="pt-input" id="pt-mq-edit-name" maxlength="60" placeholder="মসজিদের নাম" aria-label="মসজিদের নাম সম্পাদনা" autocomplete="off">
+            <div class="pt-btnrow"><button type="button" class="pt-btn pt-btn-primary pt-btn-sm" id="pt-mq-edit-save">সংরক্ষণ</button><button type="button" class="pt-btn pt-btn-sm" id="pt-mq-edit-cancel">বাতিল</button></div>
+            <div class="pt-msg pt-msg-err" id="pt-mq-edit-msg" role="status" aria-live="polite"></div>
+          </div>
+          <div class="pt-mq-form pt-mq-del" id="pt-mq-delform" hidden>
+            <span id="pt-mq-del-text"></span>
+            <div class="pt-btnrow"><button type="button" class="pt-btn pt-btn-sm pt-btn-danger" id="pt-mq-del-yes">হ্যাঁ, মুছে ফেলুন</button><button type="button" class="pt-btn pt-btn-sm" id="pt-mq-del-no">না</button></div>
+          </div>
+          <div class="pt-mq-sum" id="pt-mq-sum">
+            <div class="pt-mq-sum-l">জামাত শুরু হতে বাকি</div>
+            <div class="pt-mq-sum-who" id="pt-mq-sum-who"></div>
+            <div class="pt-mq-count" id="pt-mq-count" role="timer" aria-live="off" data-remaining-ms=""></div>
+            <div class="pt-mq-started" id="pt-mq-started"></div>
+          </div>
+          <div class="pt-mq-rows" id="pt-mq-rows"></div>
+          <p class="pt-hint">জামাতের সময় আপনি নিজে নির্ধারণ করুন; অ্যাপ কোনো সময় অনুমান করে না। সময় বদলালে স্বয়ংক্রিয়ভাবে সংরক্ষিত হয়।</p>
+          <div class="pt-msg" id="pt-mq-save-msg" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+      <p class="pt-foot">ওয়াক্তের সময় জ্যোতির্বিজ্ঞানভিত্তিক গণনা; মসজিদের জামাতের সময় আপনার নিজের দেওয়া।</p>
+      <p class="pt-foot pt-scholar-s">সময়গুলো হানাফি মত অনুযায়ী আনুমানিক হিসাব। ব্যক্তিগত মাসআলা ও বিশেষ পরিস্থিতিতে নির্ভরযোগ্য আলেমের পরামর্শ নিন।</p>
+      <p class="pt-credit">গণনা লাইব্রেরি: <strong>Adhan-js</strong> © 2016 Batoul Apps — MIT লাইসেন্স (পূর্ণ নোটিশ এই ফাইলের সোর্সে আছে)।</p>
+      <div class="pt-advanced" id="pt-advanced" hidden>
+      <div class="pt-banner">
+        <strong>নামাজের সময়সূচি</strong>
+        <span>এখানকার সময় জ্যোতির্বিজ্ঞানভিত্তিক গণনা, কোনো মসজিদ বা ইসলামিক ফাউন্ডেশনের প্রকাশিত সময়সূচি নয়। গণনা পুরোপুরি অফলাইনে ডিভাইসেই হয়।</span>
+      </div>
+      <section class="pt-card" aria-labelledby="pt-h-nafl">
+        <h3 id="pt-h-nafl">নফল নামাজের সময়</h3>
+        <table class="pt-table pt-waqt pt-extra" id="pt-nafl-table"><tbody></tbody></table>
+        <div class="pt-hints" id="pt-nafl-hint"></div>
+      </section>
+      <section class="pt-card" aria-labelledby="pt-h-mk">
+        <h3 id="pt-h-mk">মাকরুহ সময় (আনুমানিক)</h3>
+        <div class="pt-mk-sum" id="pt-mk-sum" role="status"></div>
+        <table class="pt-table pt-waqt pt-extra" id="pt-mk-table"><tbody></tbody></table>
+        <div class="pt-hints" id="pt-mk-hint"></div>
+      </section>
+      <section class="pt-card pt-notes-card" aria-labelledby="pt-h-notes">
+        <h3 id="pt-h-notes">তথ্য-নোট</h3>
+        <p class="pt-hint"><strong>নফল নামাজের নিষেধাজ্ঞা (ফিকহি তথ্য):</strong> ফজরের নামাজ আদায়ের পর থেকে সূর্যোদয় পর্যন্ত এবং আসরের নামাজ আদায়ের পর থেকে সূর্যাস্ত পর্যন্ত নফল নামাজ পড়া নিষেধ। এটি আপনার নিজের ফরজ আদায়ের সময়ের ওপর নির্ভর করে, তাই এখানে কাউন্টডাউন বা সময়সীমা হিসেবে নয়, শুধু তথ্য হিসেবে দেওয়া হলো। এটি উপরের তিনটি মাকরুহ সময় থেকে আলাদা বিষয়।</p>
+        <p class="pt-hint pt-scholar">সময়গুলো হানাফি মত অনুযায়ী আনুমানিক হিসাব। ব্যক্তিগত মাসআলা ও বিশেষ পরিস্থিতিতে নির্ভরযোগ্য আলেমের পরামর্শ নিন।</p>
+      </section>
+      <section class="pt-card" aria-labelledby="pt-h-set">
+        <h3 id="pt-h-set">গণনা সেটিংস</h3>
+        <div class="pt-grid">
+          <label class="pt-field pt-wide"><span>গণনা পদ্ধতি</span>${sel('pt-s-method', METHOD_KEYS.map(k => [k, METHOD_LABELS[k]]), state.settings.method)}</label>
+          <label class="pt-field"><span>ফজরের কোণ (°)</span><input class="pt-input" id="pt-s-fajr" inputmode="decimal"></label>
+          <label class="pt-field"><span>ইশার কোণ (°)</span><input class="pt-input" id="pt-s-isha" inputmode="decimal"></label>
+          <label class="pt-field"><span>ইশা — মাগরিবের পর (মিনিট; ০ = কোণ ব্যবহার)</span><input class="pt-input" id="pt-s-interval" inputmode="numeric"></label>
+          <label class="pt-field"><span>আসরের হিসাব</span>${sel('pt-s-asr', [['hanafi', 'হানাফি (ছায়া ২ গুণ) — ডিফল্ট'], ['shafi', 'শাফিয়ি/জমহুর (ছায়া ১ গুণ)']], state.settings.asr)}</label>
+          <label class="pt-field"><span>উচ্চ অক্ষাংশ নিয়ম</span>${sel('pt-s-hl', HIGHLAT_KEYS.map(k => [k, HL_LABELS[k]]), state.settings.highLat)}</label>
+          <label class="pt-field"><span>সময় অঞ্চল</span>${sel('pt-s-tz', [['dhaka', 'Asia/Dhaka (বাংলাদেশ, UTC+৬) — ডিফল্ট'], ['device', 'ডিভাইসের সময় অঞ্চল']], state.settings.tzMode)}</label>
+        </div>
+        <h4 class="pt-sub">স্থানীয় মিনিট সমন্বয় (−৬০ থেকে +৬০)</h4>
+        <div class="pt-grid pt-grid-adj">
+          ${ROWS.map(r => `<label class="pt-field"><span>${r[1].split(' ')[0]}</span><input class="pt-input" id="pt-a-${r[0]}" inputmode="numeric"></label>`).join('')}
+        </div>
+        <div class="pt-btnrow">
+          <button type="button" class="pt-btn pt-btn-primary" id="pt-s-save">সেটিংস সংরক্ষণ</button>
+          <button type="button" class="pt-btn" id="pt-s-reset">ডিফল্টে ফেরা (কারাচি + হানাফি)</button>
+        </div>
+        <div class="pt-msg" id="pt-set-msg" role="status" aria-live="polite"></div>
+        <p class="pt-hint" id="pt-moon-hint" hidden>মুনসাইটিং কমিটি পদ্ধতি নিজস্ব মৌসুমি সূত্র ব্যবহার করে, তাই কোণ ঘরগুলো এখানে প্রযোজ্য নয়।</p>
+      </section>
+      <section class="pt-card" aria-labelledby="pt-h-set4">
+        <h3 id="pt-h-set4">নফল ও মাকরুহ সেটিংস</h3>
+        <h4 class="pt-sub">মাকরুহ সময় (আনুমানিক সতর্কতামূলক মান, মিনিট)</h4>
+        <div class="pt-grid pt-grid-adj">
+          <label class="pt-field"><span>সূর্যোদয়ের পর (১০–৩০)</span><input class="pt-input" id="p4-sr" inputmode="numeric"></label>
+          <label class="pt-field"><span>সূর্যাস্তের আগে (১০–৩০)</span><input class="pt-input" id="p4-ss" inputmode="numeric"></label>
+          <label class="pt-field"><span>ইস্তিওয়া: মধ্যাহ্নের আগে (০–১০)</span><input class="pt-input" id="p4-ib" inputmode="numeric"></label>
+        </div>
+        <h4 class="pt-sub">নফল</h4>
+        <div class="pt-grid">
+          <label class="pt-field"><span>ইশরাক ও চাশত</span><select class="pt-input" id="p4-duha"><option value="separate">আলাদা সময় দেখানো (ডিফল্ট)</option><option value="combined">একত্রে (ইশরাক ও দুহা)</option></select></label>
+          <label class="pt-field"><span>চাশতের শুরু</span><select class="pt-input" id="p4-chmode"><option value="quarter">দিনের এক-চতুর্থাংশ পর (ডিফল্ট)</option><option value="minutes">সূর্যোদয়ের নির্দিষ্ট মিনিট পর</option></select></label>
+          <label class="pt-field"><span>"নির্দিষ্ট মিনিট" হলে: সূর্যোদয়ের কত মিনিট পর (৩০–২৪০)</span><input class="pt-input" id="p4-chmin" inputmode="numeric"></label>
+          <label class="pt-field"><span>"দিন"-এর সংজ্ঞা (এক-চতুর্থাংশ হিসাবে)</span><select class="pt-input" id="p4-day"><option value="sun">সূর্যোদয় থেকে সূর্যাস্ত (ডিফল্ট)</option><option value="fajrMaghrib">ফজর থেকে মাগরিব</option></select></label>
+          <label class="pt-field"><span>আওয়াবিনের শেষ</span><select class="pt-input" id="p4-awend"><option value="isha">ইশার শুরু (ডিফল্ট)</option><option value="minutes">মাগরিবের নির্দিষ্ট মিনিট পর</option></select></label>
+          <label class="pt-field"><span>"নির্দিষ্ট মিনিট" হলে: মাগরিবের কত মিনিট পর (১৫–১৮০)</span><input class="pt-input" id="p4-awmin" inputmode="numeric"></label>
+          <label class="pt-field pt-wide"><span>রাতের সংজ্ঞা (শেষ এক-তৃতীয়াংশের হিসাবে)</span><select class="pt-input" id="p4-night"><option value="maghribFajr">মাগরিব থেকে ফজর (ডিফল্ট)</option><option value="sunsetSunrise">সূর্যাস্ত থেকে সূর্যোদয়</option></select></label>
+        </div>
+        <div class="pt-btnrow">
+          <button type="button" class="pt-btn pt-btn-primary" id="p4-save">সংরক্ষণ</button>
+          <button type="button" class="pt-btn" id="p4-reset">নফল ও মাকরুহ সেটিংস ডিফল্টে ফেরা</button>
+        </div>
+        <div class="pt-msg" id="p4-msg" role="status" aria-live="polite"></div>
+      </section>
+      <section class="pt-card" aria-labelledby="pt-h-out">
+        <h3 id="pt-h-out">গণনার ফলাফল (ইঞ্জিন যাচাই)</h3>
+        <div class="pt-datebar">
+          <button type="button" class="pt-btn pt-btn-sm" id="pt-d-prev" aria-label="আগের দিন">‹</button>
+          <input type="date" class="pt-input pt-date" id="pt-d-input" min="1900-01-01" max="2100-12-31">
+          <button type="button" class="pt-btn pt-btn-sm" id="pt-d-next" aria-label="পরের দিন">›</button>
+          <button type="button" class="pt-btn pt-btn-sm" id="pt-d-today">আজ</button>
+        </div>
+        <div class="pt-datelabel" id="pt-d-label"></div>
+        <table class="pt-table" id="pt-table"><tbody></tbody></table>
+        <div class="pt-meta" id="pt-meta"></div>
+      </section>
+      </div>`;
+
+    // ───── বিদ্যমান অবস্থা ফর্মে ─────
+    const ids = {
+      method: $(root, '#pt-s-method'), fajr: $(root, '#pt-s-fajr'), isha: $(root, '#pt-s-isha'), interval: $(root, '#pt-s-interval'),
+      asr: $(root, '#pt-s-asr'), hl: $(root, '#pt-s-hl'), tz: $(root, '#pt-s-tz')
+    };
+    let viewYmd = todayYMD();
+
+    function fillSettingsForm() {
+      const s = state.settings;
+      ids.method.value = s.method; ids.fajr.value = s.fajrAngle; ids.isha.value = s.ishaAngle; ids.interval.value = s.ishaInterval;
+      ids.asr.value = s.asr; ids.hl.value = s.highLat; ids.tz.value = s.tzMode;
+      PRAYER_KEYS.forEach(k => { $(root, '#pt-a-' + k).value = s.adjustments[k]; });
+      $(root, '#pt-moon-hint').hidden = (s.method !== 'MoonsightingCommittee');
+    }
+    function renderLocation() {
+      const L = state.location, box = $(root, '#pt-loc-summary');
+      box.textContent = '';
+      const top = el('div', 'pt-loc-top');
+      top.appendChild(el('span', 'pt-loc-name', L.name));
+      const srcLabel = { default: 'ডিফল্ট', gps: 'জিপিএস', manual: 'ম্যানুয়াল' }[L.source];
+      top.appendChild(el('span', 'pt-badge pt-badge-' + L.source, srcLabel));
+      box.appendChild(top);
+      box.appendChild(el('div', 'pt-loc-coords', `অক্ষাংশ ${bn(L.lat.toFixed(4))}, দ্রাঘিমাংশ ${bn(L.lng.toFixed(4))} · সময় অঞ্চল ${resolveTz(state.settings)}`));
+      if (L.source === 'default') box.appendChild(el('div', 'pt-warn', 'আপনি এখনো লোকেশন সেট করেননি; আপাতত ঢাকার কেন্দ্রের স্থানাঙ্ক ব্যবহার হচ্ছে। নির্ভুল সময়ের জন্য জিপিএস বা ম্যানুয়াল লোকেশন দিন।'));
+      const inBD = L.lat >= 20.5 && L.lat <= 26.7 && L.lng >= 88.0 && L.lng <= 92.8;
+      if (!inBD && state.settings.tzMode === 'dhaka') box.appendChild(el('div', 'pt-warn', 'এই স্থানাঙ্ক বাংলাদেশের বাইরে, কিন্তু সময় অঞ্চল Asia/Dhaka ধরা আছে। প্রয়োজনে সেটিংস থেকে "ডিভাইসের সময় অঞ্চল" বেছে নিন।'));
+      $(root, '#pt-m-name').value = L.source === 'default' ? '' : L.name;
+      $(root, '#pt-m-lat').value = L.lat; $(root, '#pt-m-lng').value = L.lng;
+      if (liveReady) refreshLive();
+    }
+    function renderResult() {
+      let res;
+      try { res = compute(viewYmd); } catch (e) { res = null; }
+      const tbody = $(root, '#pt-table tbody'); tbody.textContent = '';
+      $(root, '#pt-d-input').value = ymdKey(viewYmd);
+      $(root, '#pt-d-label').textContent = fmtDateBn(viewYmd, resolveTz(state.settings));
+      if (!res) { $(root, '#pt-meta').textContent = 'গণনা করা যায়নি।'; return; }
+      ROWS.forEach(([k, bnName, enName]) => {
+        const tr = el('tr'); const t = res.times[k];
+        const th = el('th'); th.appendChild(el('span', 'pt-pn', bnName)); th.appendChild(el('span', 'pt-pe', enName));
+        const td = el('td', 'pt-time', fmtTime(t, res.tz));
+        td.dataset.key = k; td.dataset.ts = isFinite(t.getTime()) ? String(t.getTime()) : '';
+        td.dataset.hm = fmtTime24(t, res.tz);
+        tr.appendChild(th); tr.appendChild(td); tbody.appendChild(tr);
+      });
+      const p = res.params, S = res.settings;
+      const adj = PRAYER_KEYS.filter(k => S.adjustments[k]).map(k => `${k} ${S.adjustments[k] > 0 ? '+' : ''}${S.adjustments[k]}`).join(', ');
+      $(root, '#pt-meta').textContent =
+        `পদ্ধতি: ${S.method} · ফজর ${bn(p.fajrAngle)}° · ইশা ${p.ishaInterval > 0 ? bn(p.ishaInterval) + ' মিনিট (মাগরিবের পর)' : bn(p.ishaAngle) + '°'}` +
+        ` · আসর: ${S.asr === 'hanafi' ? 'হানাফি' : 'শাফিয়ি'} · সময় অঞ্চল ${res.tz}` +
+        (adj ? ` · সমন্বয় (মিনিট): ${adj}` : '') + (res.valid ? '' : ' · ⚠ এই অক্ষাংশে কিছু সময় নির্ণয় করা যায়নি') +
+        ` · ইঞ্জিন: ${res.engine}`;
+    }
+
+    // ───── লোকেশন ইভেন্ট ─────
+    const locMsg = (t, kind) => { const m = $(root, '#pt-loc-msg'); m.textContent = t || ''; m.className = 'pt-msg' + (kind ? ' pt-msg-' + kind : ''); };
+    const setMsg = (t, kind) => { const m = $(root, '#pt-set-msg'); m.textContent = t || ''; m.className = 'pt-msg' + (kind ? ' pt-msg-' + kind : ''); };
+
+    const gpsBtn = $(root, '#pt-gps');
+    gpsBtn.addEventListener('click', async () => {
+      gpsBtn.disabled = true; locMsg('লোকেশন খোঁজা হচ্ছে…');
+      try {
+        const g = await locateGPS();
+        const r = setLocation({ lat: g.lat, lng: g.lng, name: 'জিপিএস লোকেশন', source: 'gps' });
+        renderLocation(); renderResult();
+        locMsg(r.ok ? 'জিপিএস লোকেশন সংরক্ষিত হয়েছে।' : 'লোকেশন পাওয়া গেছে, কিন্তু স্থায়ীভাবে সংরক্ষণ করা যায়নি (ব্রাউজারে স্টোরেজ বন্ধ থাকতে পারে)।', r.ok ? 'ok' : 'warn');
+      } catch (e) {
+        const hint = (!window.isSecureContext ? ' (জিপিএসের জন্য https বা নিরাপদ সংযোগ লাগতে পারে)' : '');
+        locMsg({ denied: 'লোকেশনের অনুমতি দেওয়া হয়নি। ম্যানুয়ালি লোকেশন দিন।' + hint,
+                 unavailable: 'ডিভাইস লোকেশন দিতে পারছে না। ম্যানুয়ালি লোকেশন দিন।',
+                 timeout: 'লোকেশন পেতে বেশি সময় লাগছে। আবার চেষ্টা করুন বা ম্যানুয়ালি দিন।',
+                 unsupported: 'এই ব্রাউজারে জিপিএস সমর্থিত নয়। ম্যানুয়ালি লোকেশন দিন।' }[e.code] || 'লোকেশন পাওয়া যায়নি।', 'err');
+      } finally { gpsBtn.disabled = false; }
+    });
+    const tgl = $(root, '#pt-manual-toggle'), man = $(root, '#pt-manual');
+    tgl.addEventListener('click', () => { man.hidden = !man.hidden; tgl.setAttribute('aria-expanded', String(!man.hidden)); });
+    const cities = $(root, '#pt-cities');
+    CITIES.forEach(([n, la, lo]) => {
+      const b = el('button', 'pt-chip', n); b.type = 'button';
+      b.addEventListener('click', () => { $(root, '#pt-m-name').value = n; $(root, '#pt-m-lat').value = la; $(root, '#pt-m-lng').value = lo; });
+      cities.appendChild(b);
+    });
+    $(root, '#pt-m-save').addEventListener('click', () => {
+      const lat = num($(root, '#pt-m-lat').value, NaN), lng = num($(root, '#pt-m-lng').value, NaN);
+      if (!(lat >= -90 && lat <= 90) || !(lng >= -180 && lng <= 180)) { locMsg('অক্ষাংশ (−৯০ থেকে ৯০) ও দ্রাঘিমাংশ (−১৮০ থেকে ১৮০) সঠিকভাবে দিন।', 'err'); return; }
+      const r = setLocation({ lat, lng, name: $(root, '#pt-m-name').value, source: 'manual' });
+      renderLocation(); renderResult();
+      locMsg(r.ok ? 'লোকেশন সংরক্ষিত হয়েছে।' : 'ব্যবহার হচ্ছে, কিন্তু স্থায়ীভাবে সংরক্ষণ করা যায়নি।', r.ok ? 'ok' : 'warn');
+    });
+
+    // ───── সেটিংস ইভেন্ট ─────
+    ids.method.addEventListener('change', () => {
+      const m = ids.method.value;
+      if (m !== 'Other') { const p = methodPreset(m); ids.fajr.value = p.fajrAngle; ids.isha.value = p.ishaAngle; ids.interval.value = p.ishaInterval; }
+      $(root, '#pt-moon-hint').hidden = (m !== 'MoonsightingCommittee');
+      setMsg('পদ্ধতির প্রিসেট মান বসানো হয়েছে। "সংরক্ষণ" চাপলে প্রয়োগ হবে।');
+    });
+    $(root, '#pt-s-save').addEventListener('click', () => {
+      const fa = num(ids.fajr.value, NaN), ia = num(ids.isha.value, NaN), iv = num(ids.interval.value, NaN);
+      if (!(fa >= 0 && fa <= 30) || !(ia >= 0 && ia <= 30)) { setMsg('ফজর ও ইশার কোণ ০ থেকে ৩০ ডিগ্রির মধ্যে হতে হবে।', 'err'); return; }
+      if (!(iv >= 0 && iv <= 180)) { setMsg('ইশার ব্যবধান ০ থেকে ১৮০ মিনিটের মধ্যে হতে হবে।', 'err'); return; }
+      const adjustments = {};
+      for (const k of PRAYER_KEYS) {
+        const v = num($(root, '#pt-a-' + k).value, NaN);
+        if (!(v >= -60 && v <= 60)) { setMsg('মিনিট সমন্বয় −৬০ থেকে +৬০ এর মধ্যে হতে হবে।', 'err'); return; }
+        adjustments[k] = v;
+      }
+      const r = setSettings({ ...state.settings, method: ids.method.value, fajrAngle: fa, ishaAngle: ia, ishaInterval: iv, asr: ids.asr.value,
+                              highLat: ids.hl.value, tzMode: ids.tz.value, adjustments });
+      viewYmd = todayYMD();
+      fillSettingsForm(); renderLocation(); renderResult();
+      setMsg(r.ok ? 'সেটিংস সংরক্ষিত হয়েছে।' : 'সেটিংস প্রয়োগ হয়েছে, কিন্তু স্থায়ীভাবে সংরক্ষণ করা যায়নি।', r.ok ? 'ok' : 'warn');
+    });
+    $(root, '#pt-s-reset').addEventListener('click', () => {
+      const r = setSettings({ ...clone(DEFAULT_SETTINGS), makruh: state.settings.makruh, nafl: state.settings.nafl, hijriAdjust: state.settings.hijriAdjust }); viewYmd = todayYMD();
+      fillSettingsForm(); renderLocation(); renderResult();
+      setMsg(r.ok ? 'ডিফল্ট সেটিংস (কারাচি + হানাফি) ফিরিয়ে আনা হয়েছে।' : 'ডিফল্টে ফেরা হয়েছে, কিন্তু সংরক্ষণ করা যায়নি।', r.ok ? 'ok' : 'warn');
+    });
+
+    // ───── তারিখ নেভিগেশন ─────
+    const dInput = $(root, '#pt-d-input');
+    dInput.addEventListener('change', () => { const y = parseYmd(dInput.value); if (y) { viewYmd = y; renderResult(); } else dInput.value = ymdKey(viewYmd); });
+    $(root, '#pt-d-prev').addEventListener('click', () => { viewYmd = addDays(viewYmd, -1); renderResult(); });
+    $(root, '#pt-d-next').addEventListener('click', () => { viewYmd = addDays(viewYmd, 1); renderResult(); });
+    $(root, '#pt-d-today').addEventListener('click', () => { viewYmd = todayYMD(); renderResult(); });
+
+
+    // ═══════════ Phase 3: লাইভ ওয়াক্ত, কাউন্টডাউন, প্রগ্রেস বার ═══════════
+    let livePlan = null, livePlanKey = '', liveTimer = null, liveReady = false;
+    const N = {
+      date: $(root, '#pt-now-date'), loc: $(root, '#pt-now-loc'), state: $(root, '#pt-now-state'), name: $(root, '#pt-now-name'),
+      label: $(root, '#pt-now-label'), count: $(root, '#pt-count'), bar: $(root, '#pt-bar'), fill: $(root, '#pt-bar-fill'),
+      bs: $(root, '#pt-bar-start'), bp: $(root, '#pt-bar-pct'), be: $(root, '#pt-bar-end'), next: $(root, '#pt-next'),
+      note: $(root, '#pt-now-note'), body: $(root, '#pt-waqt-table tbody'), hint: $(root, '#pt-waqt-hint')
+    };
+    function dayWord(ms, plan) {
+      const d = dayDiff(plan.ymd, ymdInTz(new Date(ms), plan.tz));
+      return d === 0 ? '' : d < 0 ? 'গতকাল ' : 'পরদিন ';
+    }
+    const tm = (ms, plan) => dayWord(ms, plan) + fmtTime(new Date(ms), plan.tz);
+
+    function renderDaily(plan) {
+      N.body.textContent = '';
+      if (!plan.valid) { const tr = el('tr'); const td = el('td', 'pt-warn', plan.warnings[0]); td.colSpan = 3; tr.appendChild(td); N.body.appendChild(tr); return; }
+      const mine = {}; plan.periods.forEach(p => { if (p.dayKey === plan.dateKey) mine[p.key] = p; });
+      const t = plan.today.times;
+      WAQT.forEach(w => {
+        const p = mine[w.key];
+        const tr = el('tr'); tr.dataset.key = w.key;
+        const th = el('th'); th.scope = 'row'; th.appendChild(el('span', 'pt-pn', w.bn)); th.appendChild(el('span', 'pt-pe', w.en));
+        const s = el('td', 'pt-time pt-r', p ? fmtTime(new Date(p.start), plan.tz) : '—');
+        const e = el('td', 'pt-time pt-time-end pt-r', p ? tm(p.end, plan) : '—');
+        if (p) { s.dataset.ts = p.start; e.dataset.ts = p.end; }
+        tr.appendChild(th); tr.appendChild(s); tr.appendChild(e); N.body.appendChild(tr);
+        if (w.key === 'fajr') {   // সূর্যোদয় = ফজরের শেষ সীমা; এরপর যোহর পর্যন্ত কোনো ফরজ ওয়াক্ত নেই
+          const sr = el('tr', 'pt-sunrise-row'); sr.dataset.key = 'sunrise';
+          const td = el('td'); td.colSpan = 3;
+          td.appendChild(el('span', 'pt-sr-name', 'সূর্যোদয় '));
+          const tt = el('strong', null, fmtTime(t.sunrise, plan.tz)); tt.dataset.ts = t.sunrise.getTime(); td.appendChild(tt);
+          td.appendChild(el('span', 'pt-sr-note', ' — ফজরের ওয়াক্ত শেষ; যোহর শুরু পর্যন্ত কোনো ফরজ ওয়াক্ত নেই'));
+          sr.appendChild(td); N.body.appendChild(sr);
+        }
+      });
+      N.hint.textContent = (plan.today.settings.asr === 'hanafi'
+        ? 'যোহরের ওয়াক্ত আসর শুরু (হানাফি: ছায়া দ্বিগুণ) পর্যন্ত; '
+        : 'যোহরের ওয়াক্ত আসর শুরু (শাফিয়ি: ছায়া সমান) পর্যন্ত; ') +
+        'আসর সূর্যাস্ত পর্যন্ত; মাগরিব ইশার শুরু পর্যন্ত; ইশা পরদিন ফজর শুরু পর্যন্ত।';
+      if (plan.warnings.length) N.hint.textContent += ' ⚠ মিনিট-সমন্বয়ের কারণে কিছু ওয়াক্তের সীমা সংশোধিত হয়েছে।';
+    }
+
+    function setCount(ms) {
+      const d = splitDuration(ms), parts = [];
+      const add = (v, unit) => { parts.push('<span class="pt-cn">' + bn(pad2(v)) + '</span> <span class="pt-cu">' + unit + '</span>'); };
+      if (d.h > 0) add(d.h, 'ঘণ্টা');
+      if (d.h > 0 || d.m > 0) add(d.m, 'মিনিট');
+      add(d.s, 'সেকেন্ড');
+      N.count.innerHTML = parts.join(' ');
+      N.count.dataset.remainingMs = String(Math.round(ms));
+    }
+    function setBar(progress, startTxt, endTxt, gap) {
+      const pct = Math.floor(progress * 100);
+      N.fill.style.width = (progress * 100).toFixed(2) + '%';
+      N.bar.setAttribute('aria-valuenow', String(pct));
+      N.bar.classList.toggle('pt-bar-gap', !!gap);
+      N.bp.textContent = bn(pct) + '%'; N.bs.textContent = startTxt; N.be.textContent = endTxt;
+    }
+
+    function renderNow(tl, plan) {
+      N.date.textContent = fmtDateBn(plan.ymd, plan.tz);
+      N.loc.textContent = state.location.name + (state.location.source === 'default' ? ' (ডিফল্ট লোকেশন)' : '');
+      N.next.textContent = ''; N.note.textContent = '';
+      const rows = N.body.querySelectorAll('tr[data-key]');
+      rows.forEach(r => r.classList.remove('pt-row-current', 'pt-row-next'));
+      if (tl.state === 'waqt') {
+        const w = WAQT_BY_KEY[tl.current.key];
+        N.state.textContent = 'এখন চলছে'; N.state.className = 'pt-now-state pt-st-waqt';
+        N.name.textContent = w.bn;
+        N.label.textContent = 'ওয়াক্ত শেষ হতে বাকি';
+        setCount(tl.remainingMs);
+        setBar(tl.progress, 'শুরু ' + tm(tl.current.start, plan), 'শেষ ' + tm(tl.current.end, plan), false);
+        if (tl.current.dayKey !== plan.dateKey) N.note.textContent = 'গতকাল শুরু হওয়া ' + w.bn + 'র ওয়াক্ত এখনো চলছে।';
+        else if (tl.current.key === 'fajr') N.note.textContent = 'ফজরের ওয়াক্ত সূর্যোদয়ে শেষ হয়। সূর্যোদয় থেকে যোহর শুরু পর্যন্ত কোনো ফরজ ওয়াক্ত নেই।';
+        if (tl.next) {
+          const nw = WAQT_BY_KEY[tl.next.key];
+          N.next.textContent = 'পরবর্তী ওয়াক্ত: ' + nw.bn + ' — ' + tm(tl.next.start, plan);
+        }
+        if (tl.current.dayKey === plan.dateKey) { const r = N.body.querySelector('tr[data-key="' + tl.current.key + '"]'); if (r) r.classList.add('pt-row-current'); }
+        if (tl.next && tl.next.dayKey === plan.dateKey) { const r = N.body.querySelector('tr[data-key="' + tl.next.key + '"]'); if (r) r.classList.add('pt-row-next'); }
+      } else if (tl.state === 'gap') {
+        const nw = WAQT_BY_KEY[tl.next.key];
+        N.state.textContent = 'এখন কোনো ফরজ ওয়াক্ত নয়'; N.state.className = 'pt-now-state pt-st-gap';
+        N.name.textContent = tl.kind === 'sunrise' ? 'সূর্যোদয় থেকে যোহর পর্যন্ত' : 'দুই ওয়াক্তের মধ্যবর্তী সময়';
+        N.label.textContent = nw.gen + ' ওয়াক্ত শুরু হতে বাকি';
+        setCount(tl.remainingMs);
+        setBar(tl.progress, tl.gapStart != null ? tm(tl.gapStart, plan) : '', 'শুরু ' + tm(tl.next.start, plan), true);
+        N.next.textContent = 'পরবর্তী ওয়াক্ত: ' + nw.bn + ' — ' + tm(tl.next.start, plan);
+        if (tl.kind === 'sunrise') N.note.textContent = 'ফজরের ওয়াক্ত শেষ হয়েছে। যোহর শুরু হওয়া পর্যন্ত কোনো ফরজ ওয়াক্ত নেই।';
+        if (tl.next.dayKey === plan.dateKey) { const r = N.body.querySelector('tr[data-key="' + tl.next.key + '"]'); if (r) r.classList.add('pt-row-next'); }
+      } else {
+        N.state.textContent = 'ওয়াক্ত নির্ণয় করা যায়নি'; N.state.className = 'pt-now-state pt-st-gap';
+        N.name.textContent = '—'; N.label.textContent = ''; N.count.textContent = ''; N.count.dataset.remainingMs = '';
+        setBar(0, '', '', true);
+        N.note.textContent = plan.warnings[0] || 'এই লোকেশন ও সেটিংসে সময় গণনা করা যায়নি।';
+      }
+    }
+
+    function livePlanFor(nowMs) {
+      const S = state.settings, tz = resolveTz(S);
+      const ymd = ymdInTz(new Date(nowMs), tz);
+      const key = ymdKey(ymd) + '|' + tz + '|' + stateVersion;
+      if (key !== livePlanKey) {            // তারিখ বদলালে (মধ্যরাত) বা লোকেশন/সেটিংস বদলালে পুনর্গণনা
+        livePlan = buildPlan(ymd, state.location, S); livePlanKey = key; renderDaily(livePlan); renderExtras(livePlan); renderStrip(livePlan); renderDates(livePlan);
+      }
+      return livePlan;
+    }
+    function liveTick() {
+      clearTimeout(liveTimer);
+      try {
+        const now = Date.now();
+        const plan = livePlanFor(now);
+        if (!document.hidden) { renderNow(timelineAt(plan, now), plan); updateExtras(plan, now); mqUpdate(plan, now); }
+      } catch (e) { console.error('live tick failed:', e); }
+      liveTimer = setTimeout(liveTick, 1000 - (Date.now() % 1000) + 8);   // সেকেন্ডের সীমানায় ঠিক করা, ড্রিফট নেই
+    }
+    function refreshLive() { livePlanKey = ''; liveTick(); }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) liveTick(); });
+    window.addEventListener('focus', liveTick);
+    window.addEventListener('pageshow', liveTick);
+
+    // ═══════════ Phase 4: নফল ও মাকরুহ সময় (লাইভ অবস্থা) ═══════════
+    const X = { nafl: $(root, '#pt-nafl-table tbody'), naflHint: $(root, '#pt-nafl-hint'),
+                mk: $(root, '#pt-mk-table tbody'), mkHint: $(root, '#pt-mk-hint'), mkSum: $(root, '#pt-mk-sum') };
+    const LABEL = { tahajjud: 'তাহাজ্জুদ', lastthird: 'রাতের শেষ এক-তৃতীয়াংশ', ishraq: 'ইশরাক', chasht: 'চাশত (দুহা)',
+                    duha: 'ইশরাক ও চাশত (দুহা)', awwabin: 'আওয়াবিন (প্রস্তাবিত সময়)',
+                    mk_sunrise: 'সূর্যোদয়', mk_istiwa: 'ইস্তিওয়া (যোহরের আগের মাকরুহ সময়)', mk_sunset: 'সূর্যাস্ত' };
+    const SHORT = { mk_sunrise: 'সূর্যোদয়ের', mk_istiwa: 'ইস্তিওয়ার', mk_sunset: 'সূর্যাস্তের' };
+    let extraRows = [];
+
+    function durText(ms) {
+      const d = splitDuration(ms), p = [];
+      if (d.h > 0) p.push(bn(pad2(d.h)) + ' ঘণ্টা');
+      if (d.h > 0 || d.m > 0) p.push(bn(pad2(d.m)) + ' মিনিট');
+      p.push(bn(pad2(d.s)) + ' সেকেন্ড');
+      return p.join(' ');
+    }
+    // কোন উইন্ডো দেখানো হবে: তাহাজ্জুদ = চলমান বা পরবর্তী রাত; বাকি = আজকের তারিখের
+    function pickWindow(plan, id, now) {
+      if (id === 'tahajjud') { const s = windowStatus(plan, 'tahajjud', now); return s.cur || s.next || s.prev; }
+      if (id === 'lastthird') {
+        const tj = pickWindow(plan, 'tahajjud', now);
+        return tj ? (plan.windows.find(w => w.id === 'lastthird' && w.end === tj.end) || null) : null;
+      }
+      return plan.windows.find(w => w.id === id && w.dayKey === plan.dateKey) || null;
+    }
+    function addRows(body, ids) {
+      body.textContent = '';
+      return ids.map(id => {
+        const tr = el('tr'); tr.dataset.id = id;
+        if (id === 'lastthird') tr.className = 'pt-row-sub';
+        const th = el('th'); th.scope = 'row'; th.appendChild(el('span', 'pt-pn', LABEL[id]));
+        const td = el('td', 'pt-ext');
+        const range = el('div', 'pt-range', '—'), stat = el('div', 'pt-stat', '');
+        td.appendChild(range); td.appendChild(stat); tr.appendChild(th); tr.appendChild(td); body.appendChild(tr);
+        return { id, tr, range, stat };
+      });
+    }
+    function para(parent, text, cls) { const p = el('p', 'pt-hint' + (cls ? ' ' + cls : ''), text); parent.appendChild(p); }
+
+    function renderExtras(plan) {
+      const S = plan.today ? plan.today.settings : state.settings, nf = S.nafl, mk = S.makruh;
+      const naflIds = nf.duhaMode === 'combined' ? ['tahajjud', 'lastthird', 'duha', 'awwabin'] : ['tahajjud', 'lastthird', 'ishraq', 'chasht', 'awwabin'];
+      const mkIds = ['mk_sunrise', 'mk_istiwa', 'mk_sunset'];
+      extraRows = addRows(X.nafl, naflIds).concat(addRows(X.mk, mkIds));
+      X.naflHint.textContent = ''; X.mkHint.textContent = '';
+      para(X.naflHint, 'তাহাজ্জুদ: ইশা থেকে ফজর শুরু পর্যন্ত নামাজের সময়সীমা। ঘুমের শর্ত অ্যাপ যাচাই করতে পারে না, তাই এটি শুধু সময়সীমা হিসেবে দেখানো হয়েছে। রাতের শেষ এক-তৃতীয়াংশ আলাদা হাইলাইট করা হয়েছে; রাত ধরা হয়েছে ' +
+        (nf.nightDef === 'maghribFajr' ? 'মাগরিব থেকে ফজর' : 'সূর্যাস্ত থেকে সূর্যোদয়') + ' পর্যন্ত।');
+      para(X.naflHint, 'ইশরাক ও চাশত (দুহা): হানাফি ব্যাখ্যায় এগুলো একই নামাজের সময়ের ভিন্ন পর্যায়। এখানে দুটিকে আবশ্যক পৃথক নামাজ হিসেবে নয়, শুধু সময়ের পর্যায় হিসেবে দেখানো হয়েছে।');
+      if (nf.duhaMode === 'separate') {
+        para(X.naflHint, 'চাশতের শুরু: ' + (nf.chashtMode === 'quarter'
+          ? (nf.dayDef === 'sun' ? 'সূর্যোদয় থেকে সূর্যাস্ত' : 'ফজর থেকে মাগরিব') + ' পর্যন্ত দিনের এক-চতুর্থাংশ অতিক্রান্ত হওয়ার পর'
+          : 'সূর্যোদয়ের ' + bn(nf.chashtMinutes) + ' মিনিট পর') + '; শেষ ইস্তিওয়ার মাকরুহ সময় শুরুর আগে।');
+      } else para(X.naflHint, 'ইশরাক ও চাশত একত্রে: সূর্যোদয়ের মাকরুহ সময় শেষ থেকে ইস্তিওয়ার মাকরুহ সময় শুরুর আগ পর্যন্ত।');
+      para(X.naflHint, 'আওয়াবিন: মাগরিব থেকে ' + (nf.awwabinEnd === 'isha' ? 'ইশার শুরু' : 'মাগরিবের ' + bn(nf.awwabinMinutes) + ' মিনিট পর') +
+        ' পর্যন্ত প্রস্তাবিত সময়। এর নামকরণ ও ফিকহি ব্যাখ্যায় মতভেদ আছে।');
+      para(X.mkHint, 'সূর্যোদয় (' + bn(mk.sunriseMin) + ' মিনিট) ও সূর্যাস্ত (' + bn(mk.sunsetMin) + ' মিনিট) আনুমানিক সতর্কতামূলক সময়। আলেমভেদে ভিন্ন মিনিট বলা হয়; এটি সর্বত্র নির্দিষ্ট শরিয়াহ-নির্ধারিত মিনিট নয়। সেটিংসে ১০–৩০ মিনিটের মধ্যে পরিবর্তনযোগ্য।');
+      para(X.mkHint, 'ইস্তিওয়া: প্রকৃত সৌর মধ্যাহ্নের ' + bn(mk.istiwaBeforeMin) + ' মিনিট আগে থেকে যোহরের শুরু পর্যন্ত। যোহরের শুরু প্রকৃত সৌর মধ্যাহ্নের আগে ধরা হয় না, তাই এই দুই সময় কখনো ওভারল্যাপ করে না। সূর্যোদয়ের সময়সীমা ফজরের শেষ মুহূর্ত থেকে শুরু, আর সূর্যাস্তের সময়সীমা আসরের শেষ মুহূর্তে শেষ।');
+      if (plan.warnings.some(w => w.indexOf('clamp') === 0 || w.indexOf('empty') === 0 || w.indexOf('overlap') === 0))
+        para(X.mkHint, '⚠ সেটিংস বা মিনিট-সমন্বয়ের কারণে ওভারল্যাপ এড়াতে কিছু সীমা সংশোধিত হয়েছে।', 'pt-warn');
+      updateExtras(plan, Date.now());
+    }
+
+    function updateExtras(plan, now) {
+      if (!plan.valid) { extraRows.forEach(r => { r.range.textContent = '—'; r.stat.textContent = ''; }); X.mkSum.textContent = ''; return; }
+      extraRows.forEach(r => {
+        const w = pickWindow(plan, r.id, now);
+        r.tr.classList.remove('pt-row-current');
+        if (!w) { r.range.textContent = '—'; r.stat.textContent = ''; r.stat.className = 'pt-stat'; return; }
+        r.range.textContent = tm(w.start, plan) + ' – ' + tm(w.end, plan);
+        r.range.dataset.start = w.start; r.range.dataset.end = w.end;
+        if (now >= w.start && now < w.end) {
+          r.stat.textContent = 'চলছে · শেষ হতে ' + durText(w.end - now); r.stat.className = 'pt-stat pt-stat-now';
+          r.tr.classList.add('pt-row-current'); r.stat.dataset.remainingMs = String(w.end - now);
+        } else if (w.start > now) {
+          r.stat.textContent = 'শুরু হতে ' + durText(w.start - now); r.stat.className = 'pt-stat pt-stat-next'; r.stat.dataset.remainingMs = String(w.start - now);
+        } else { r.stat.textContent = 'শেষ হয়েছে'; r.stat.className = 'pt-stat pt-stat-past'; r.stat.dataset.remainingMs = ''; }
+      });
+      const s = makruhSummary(plan, now);
+      if (s.cur) { X.mkSum.textContent = 'এখন মাকরুহ সময় চলছে: ' + LABEL[s.cur.id] + ' — শেষ হতে ' + durText(s.cur.end - now); X.mkSum.className = 'pt-mk-sum pt-mk-now'; X.mkSum.dataset.id = s.cur.id; X.mkSum.dataset.remainingMs = String(s.cur.end - now); }
+      else if (s.next) { X.mkSum.textContent = 'এখন মাকরুহ সময় নয়। পরবর্তী: ' + LABEL[s.next.id] + ' — ' + tm(s.next.start, plan) + ' থেকে, শুরু হতে ' + durText(s.next.start - now); X.mkSum.className = 'pt-mk-sum'; X.mkSum.dataset.id = s.next.id; X.mkSum.dataset.remainingMs = String(s.next.start - now); }
+      else { X.mkSum.textContent = ''; }
+    }
+
+    // ───── নফল ও মাকরুহ সেটিংস ফর্ম ─────
+    const P4 = { sr: $(root, '#p4-sr'), ss: $(root, '#p4-ss'), ib: $(root, '#p4-ib'), duha: $(root, '#p4-duha'), chmode: $(root, '#p4-chmode'),
+                 chmin: $(root, '#p4-chmin'), day: $(root, '#p4-day'), awend: $(root, '#p4-awend'), awmin: $(root, '#p4-awmin'), night: $(root, '#p4-night') };
+    const p4Msg = (t, kind) => { const e = $(root, '#p4-msg'); e.textContent = t || ''; e.className = 'pt-msg' + (kind ? ' pt-msg-' + kind : ''); };
+    function fillP4Form() {
+      const mk = state.settings.makruh, nf = state.settings.nafl;
+      P4.sr.value = mk.sunriseMin; P4.ss.value = mk.sunsetMin; P4.ib.value = mk.istiwaBeforeMin;
+      P4.duha.value = nf.duhaMode; P4.chmode.value = nf.chashtMode; P4.chmin.value = nf.chashtMinutes; P4.day.value = nf.dayDef;
+      P4.awend.value = nf.awwabinEnd; P4.awmin.value = nf.awwabinMinutes; P4.night.value = nf.nightDef;
+    }
+    $(root, '#p4-save').addEventListener('click', () => {
+      const v = (inp, lo, hi) => { const n = num(inp.value, NaN); return (n >= lo && n <= hi) ? Math.round(n) : null; };
+      const sr = v(P4.sr, 10, 30), ss = v(P4.ss, 10, 30), ib = v(P4.ib, 0, 10), cm = v(P4.chmin, 30, 240), am = v(P4.awmin, 15, 180);
+      if (sr === null || ss === null) { p4Msg('সূর্যোদয় ও সূর্যাস্তের মাকরুহ সময় ১০ থেকে ৩০ মিনিটের মধ্যে হতে হবে।', 'err'); return; }
+      if (ib === null) { p4Msg('ইস্তিওয়ার মিনিট ০ থেকে ১০-এর মধ্যে হতে হবে।', 'err'); return; }
+      if (cm === null) { p4Msg('চাশতের নির্দিষ্ট মিনিট ৩০ থেকে ২৪০-এর মধ্যে হতে হবে।', 'err'); return; }
+      if (am === null) { p4Msg('আওয়াবিনের নির্দিষ্ট মিনিট ১৫ থেকে ১৮০-এর মধ্যে হতে হবে।', 'err'); return; }
+      const r = setSettings({ ...state.settings,
+        makruh: { sunriseMin: sr, sunsetMin: ss, istiwaBeforeMin: ib },
+        nafl: { duhaMode: P4.duha.value, chashtMode: P4.chmode.value, chashtMinutes: cm, dayDef: P4.day.value,
+                awwabinEnd: P4.awend.value, awwabinMinutes: am, nightDef: P4.night.value } });
+      fillP4Form(); refreshLive();
+      p4Msg(r.ok ? 'নফল ও মাকরুহ সেটিংস সংরক্ষিত হয়েছে।' : 'প্রয়োগ হয়েছে, কিন্তু স্থায়ীভাবে সংরক্ষণ করা যায়নি।', r.ok ? 'ok' : 'warn');
+    });
+    $(root, '#p4-reset').addEventListener('click', () => {
+      const r = setSettings({ ...state.settings, makruh: clone(DEFAULT_SETTINGS.makruh), nafl: clone(DEFAULT_SETTINGS.nafl) });
+      fillP4Form(); refreshLive();
+      p4Msg(r.ok ? 'নফল ও মাকরুহ সেটিংস ডিফল্টে ফিরেছে।' : 'ডিফল্টে ফেরা হয়েছে, কিন্তু সংরক্ষণ করা যায়নি।', r.ok ? 'ok' : 'warn');
+    });
+
+    // ═══════════ Phase 5: সাহরি শেষ, ইশরাক, ইফতার ═══════════
+    const T = { sahri: $(root, '#pt-t-sahri'), ishraq: $(root, '#pt-t-ishraq'), ishraqS: $(root, '#pt-t-ishraq-s'), iftar: $(root, '#pt-t-iftar') };
+    // সাহরি শেষ = ফজরের ওয়াক্ত শুরু; ইশরাক = সূর্যোদয়ের মাকরুহ সময় শেষ (Phase 4); ইফতার = মাগরিবের ওয়াক্ত শুরু (সূর্যাস্ত)
+    function renderStrip(plan) {
+      const set = (elm, ms) => { elm.textContent = ms != null ? fmtTime(new Date(ms), plan.tz) : '—'; elm.dataset.ts = ms != null ? String(ms) : ''; };
+      if (!plan.valid) { set(T.sahri, null); set(T.ishraq, null); set(T.iftar, null); return; }
+      const per = k => plan.periods.find(p => p.key === k && p.dayKey === plan.dateKey);
+      const ish = plan.windows.find(w => (w.id === 'ishraq' || w.id === 'duha') && w.dayKey === plan.dateKey);
+      set(T.sahri, per('fajr') ? per('fajr').start : null);
+      set(T.ishraq, ish ? ish.start : null);
+      set(T.iftar, per('maghrib') ? per('maghrib').start : null);
+      T.ishraqS.textContent = 'সূর্যোদয়ের ' + bn(plan.today.settings.makruh.sunriseMin) + ' মিনিট পর';
+    }
+
+    // ═══════════ Phase 6: তারিখ (ইংরেজি, বাংলা, হিজরি) ═══════════
+    const HJ = { en: $(root, '#pt-d-en'), bn: $(root, '#pt-d-bn'), hj: $(root, '#pt-d-hj'), sep: $(root, '.pt-d-sep'), toggle: $(root, '#pt-hj-toggle'), row: $(root, '#pt-hj-adj') };
+    function renderDates(plan) {
+      const adj = state.settings.hijriAdjust, B = banglaFor(plan.ymd), H = hijriFor(plan.ymd, adj);
+      HJ.en.textContent = enDate(plan.ymd);
+      HJ.bn.textContent = B ? bn(B.d) + ' ' + BN_MONTHS[B.m] + ' ' + bn(B.y) + ' বঙ্গাব্দ' : '';
+      HJ.hj.textContent = H ? bn(H.d) + ' ' + HIJRI_MONTHS_BN[H.m - 1] + ' ' + bn(H.y) + ' হিজরি' + (adj ? ' (' + (adj > 0 ? '+' : '−') + '১ দিন সমন্বিত)' : '') : '';
+      HJ.hj.dataset.adj = String(adj);
+      HJ.sep.hidden = !(B && H); HJ.toggle.hidden = !H;
+      if (!H) HJ.row.hidden = true;
+      HJ.row.querySelectorAll('button[data-adj]').forEach(b => {
+        const on = Number(b.dataset.adj) === adj; b.setAttribute('aria-checked', String(on)); b.classList.toggle('pt-seg-on', on);
+      });
+    }
+    HJ.toggle.addEventListener('click', () => {
+      HJ.row.hidden = !HJ.row.hidden; HJ.toggle.setAttribute('aria-expanded', String(!HJ.row.hidden));
+      HJ.toggle.textContent = HJ.row.hidden ? 'সমন্বয়' : 'বন্ধ করুন';
+    });
+    HJ.row.addEventListener('click', e => {
+      const b = e.target.closest('button[data-adj]'); if (!b) return;
+      setSettings({ ...state.settings, hijriAdjust: Number(b.dataset.adj) }); refreshLive();
+    });
+
+    // লোকেশন কার্ড: ডিফল্টে লুকানো, "লোকেশন বদলান" চাপলে খোলে
+    const locCard = $(root, '#pt-loc-card'), locBtn = $(root, '#pt-loc-toggle');
+    locBtn.addEventListener('click', () => {
+      locCard.hidden = !locCard.hidden;
+      locBtn.setAttribute('aria-expanded', String(!locCard.hidden));
+      locBtn.textContent = locCard.hidden ? 'লোকেশন বদলান' : 'লোকেশন লুকান';
+    });
+
+    // ═══════════ Phase 5: মসজিদ ও জামাত (UI) ═══════════
+    const Q = { chips: $(root, '#pt-mq-chips'), empty: $(root, '#pt-mq-empty'), panel: $(root, '#pt-mq-panel'), name: $(root, '#pt-mq-name'),
+      rows: $(root, '#pt-mq-rows'), who: $(root, '#pt-mq-sum-who'), count: $(root, '#pt-mq-count'), started: $(root, '#pt-mq-started'),
+      addBtn: $(root, '#pt-mq-add-btn'), addForm: $(root, '#pt-mq-addform'), addIn: $(root, '#pt-mq-new-name'), addMsg: $(root, '#pt-mq-add-msg'),
+      editBtn: $(root, '#pt-mq-edit-btn'), editForm: $(root, '#pt-mq-editform'), editIn: $(root, '#pt-mq-edit-name'), editMsg: $(root, '#pt-mq-edit-msg'),
+      delBtn: $(root, '#pt-mq-del-btn'), delForm: $(root, '#pt-mq-delform'), delText: $(root, '#pt-mq-del-text'), saveMsg: $(root, '#pt-mq-save-msg') };
+    let mqRows = {};
+    const dayLabel = (ms, plan) => { const d = dayDiff(plan.ymd, ymdInTz(new Date(ms), plan.tz)); return d === 0 ? 'আজ' : d === 1 ? 'আগামীকাল' : d === -1 ? 'গতকাল' : ''; };
+    function countHtml(ms) {
+      const d = splitDuration(ms), parts = [];
+      const add = (v, unit) => { parts.push('<span class="pt-cn">' + bn(pad2(v)) + '</span> <span class="pt-cu">' + unit + '</span>'); };
+      if (d.h > 0) add(d.h, 'ঘণ্টা');
+      if (d.h > 0 || d.m > 0) add(d.m, 'মিনিট');
+      add(d.s, 'সেকেন্ড');
+      return parts.join(' ');
+    }
+    function mqNote(res) {
+      Q.saveMsg.textContent = (res && res.ok && res.saved === false) ? 'ব্রাউজারে স্টোরেজ বন্ধ থাকায় তথ্য স্থায়ীভাবে সংরক্ষণ করা যায়নি; রিলোডের পর হারিয়ে যেতে পারে।' : '';
+      Q.saveMsg.className = 'pt-msg pt-msg-warn';
+    }
+    function mqRender() {
+      const ms = mosqueState.mosques, sel = selectedMosque();
+      Q.chips.textContent = '';
+      ms.forEach(mo => {
+        const on = !!(sel && sel.id === mo.id);
+        const b = el('button', 'pt-chip pt-mq-chip' + (on ? ' pt-chip-on' : ''), mo.name);
+        b.type = 'button'; b.dataset.id = mo.id; b.setAttribute('aria-pressed', String(on)); Q.chips.appendChild(b);
+      });
+      Q.empty.hidden = ms.length > 0; Q.panel.hidden = !sel; Q.editForm.hidden = true; Q.delForm.hidden = true;
+      Q.rows.textContent = ''; mqRows = {};
+      if (sel) {
+        Q.name.textContent = sel.name;
+        JAMAAT_KEYS.forEach(k => {
+          const nm = WAQT_BY_KEY[k].bn;
+          const row = el('div', 'pt-mq-row'); row.dataset.key = k;
+          const lab = el('label', 'pt-mq-rl', nm); lab.htmlFor = 'pt-mq-t-' + k;
+          const inp = el('input', 'pt-input pt-mq-time'); inp.type = 'time'; inp.id = 'pt-mq-t-' + k; inp.value = sel.jamaat[k]; inp.dataset.key = k;
+          inp.setAttribute('aria-label', nm + ' জামাতের সময়');
+          const clr = el('button', 'pt-btn pt-btn-sm pt-mq-clr', '✕'); clr.type = 'button'; clr.dataset.key = k; clr.setAttribute('aria-label', nm + ' জামাতের সময় মুছুন');
+          const stat = el('div', 'pt-mq-stat'), warn = el('div', 'pt-mq-warn');
+          row.appendChild(lab); row.appendChild(inp); row.appendChild(clr); row.appendChild(stat); row.appendChild(warn); Q.rows.appendChild(row);
+          mqRows[k] = { row, inp, clr, stat, warn };
+        });
+      }
+      mqUpdate(livePlan, Date.now());
+    }
+    function mqUpdate(plan, now) {
+      const sel = selectedMosque();
+      if (!sel || !plan) return;
+      const js = jamaatStatus(plan, sel, now);
+      JAMAAT_KEYS.forEach(k => {
+        const r = js.rows[k], ui = mqRows[k]; if (!ui) return;
+        ui.clr.hidden = (r.state === 'none');
+        ui.row.classList.toggle('pt-mq-next', !!(js.next && js.next.key === k && js.next.dayKey === plan.dateKey));
+        ui.stat.dataset.state = r.state; ui.stat.dataset.remainingMs = '';
+        if (r.state === 'none') { ui.stat.textContent = 'জামাতের সময় দিন'; ui.stat.className = 'pt-mq-stat pt-mq-st-none'; }
+        else if (r.state === 'upcoming') { ui.stat.textContent = 'জামাত শুরু হতে ' + durText(r.remainingMs); ui.stat.className = 'pt-mq-stat pt-mq-st-up'; ui.stat.dataset.remainingMs = String(r.remainingMs); }
+        else if (r.state === 'started') { ui.stat.textContent = 'জামাত শুরু হয়েছে'; ui.stat.className = 'pt-mq-stat pt-mq-st-started'; }
+        else { ui.stat.textContent = 'শেষ হয়েছে'; ui.stat.className = 'pt-mq-stat pt-mq-st-past'; }
+        ui.warn.textContent = r.outside ? '⚠ এই সময় ওয়াক্তের সময়সীমার বাইরে' : '';
+      });
+      if (js.next) {
+        const w = WAQT_BY_KEY[js.next.key];
+        Q.who.textContent = 'পরবর্তী জামাত: ' + w.bn + ' — ' + dayLabel(js.next.ts, plan) + ' ' + fmtTime(new Date(js.next.ts), plan.tz);
+        Q.count.innerHTML = countHtml(js.next.remainingMs); Q.count.dataset.remainingMs = String(js.next.remainingMs); Q.count.dataset.key = js.next.key;
+      } else {
+        Q.who.textContent = 'জামাতের সময় দিলে এখানে কাউন্টডাউন দেখাবে।';
+        Q.count.textContent = ''; Q.count.dataset.remainingMs = ''; Q.count.dataset.key = '';
+      }
+      if (js.started) {
+        const w = WAQT_BY_KEY[js.started.key];
+        Q.started.textContent = w.bn + ' জামাত শুরু হয়েছে (' + dayLabel(js.started.ts, plan) + ' ' + fmtTime(new Date(js.started.ts), plan.tz) + ')';
+        Q.started.dataset.key = js.started.key;
+      } else { Q.started.textContent = ''; Q.started.dataset.key = ''; }
+    }
+
+    // ───── মসজিদ যোগ / সম্পাদনা / মুছে ফেলা / নির্বাচন ─────
+    Q.addBtn.addEventListener('click', () => {
+      Q.addForm.hidden = !Q.addForm.hidden; Q.addBtn.setAttribute('aria-expanded', String(!Q.addForm.hidden));
+      Q.addMsg.textContent = ''; if (!Q.addForm.hidden) Q.addIn.focus();
+    });
+    const doAdd = () => {
+      const r = addMosque(Q.addIn.value);
+      if (!r.ok) { Q.addMsg.textContent = 'মসজিদের নাম লিখুন।'; return; }
+      Q.addIn.value = ''; Q.addForm.hidden = true; Q.addBtn.setAttribute('aria-expanded', 'false'); Q.addMsg.textContent = '';
+      mqRender(); mqNote(r);
+    };
+    $(root, '#pt-mq-add-save').addEventListener('click', doAdd);
+    Q.addIn.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
+    $(root, '#pt-mq-add-cancel').addEventListener('click', () => { Q.addForm.hidden = true; Q.addIn.value = ''; Q.addMsg.textContent = ''; Q.addBtn.setAttribute('aria-expanded', 'false'); });
+
+    Q.chips.addEventListener('click', e => {
+      const b = e.target.closest('button[data-id]'); if (!b) return;
+      const r = selectMosque(b.dataset.id); mqRender(); mqNote(r);
+    });
+
+    Q.editBtn.addEventListener('click', () => {
+      const sel = selectedMosque(); if (!sel) return;
+      Q.delForm.hidden = true; Q.editForm.hidden = false; Q.editIn.value = sel.name; Q.editMsg.textContent = ''; Q.editIn.focus();
+    });
+    const doEdit = () => {
+      const sel = selectedMosque(); if (!sel) return;
+      const r = renameMosque(sel.id, Q.editIn.value);
+      if (!r.ok) { Q.editMsg.textContent = 'মসজিদের নাম খালি রাখা যাবে না।'; return; }
+      mqRender(); mqNote(r);
+    };
+    $(root, '#pt-mq-edit-save').addEventListener('click', doEdit);
+    Q.editIn.addEventListener('keydown', e => { if (e.key === 'Enter') doEdit(); });
+    $(root, '#pt-mq-edit-cancel').addEventListener('click', () => { Q.editForm.hidden = true; Q.editMsg.textContent = ''; });
+
+    Q.delBtn.addEventListener('click', () => {
+      const sel = selectedMosque(); if (!sel) return;
+      Q.editForm.hidden = true; Q.delForm.hidden = false; Q.delText.textContent = '"' + sel.name + '" মুছে ফেলবেন? এর সব জামাতের সময়ও মুছে যাবে।';
+    });
+    $(root, '#pt-mq-del-yes').addEventListener('click', () => {
+      const sel = selectedMosque(); if (!sel) return;
+      const r = removeMosque(sel.id); mqRender(); mqNote(r);
+    });
+    $(root, '#pt-mq-del-no').addEventListener('click', () => { Q.delForm.hidden = true; });
+
+    // জামাতের সময় বদলালে সাথে সাথে সংরক্ষণ ও হিসাব
+    Q.rows.addEventListener('change', e => {
+      const inp = e.target.closest('input.pt-mq-time'); const sel = selectedMosque(); if (!inp || !sel) return;
+      const r = setJamaat(sel.id, inp.dataset.key, inp.value);
+      if (!r.ok) { inp.value = sel.jamaat[inp.dataset.key]; return; }
+      mqUpdate(livePlan, Date.now()); mqNote(r);
+    });
+    Q.rows.addEventListener('click', e => {
+      const b = e.target.closest('button.pt-mq-clr'); const sel = selectedMosque(); if (!b || !sel) return;
+      const r = setJamaat(sel.id, b.dataset.key, ''); mqRows[b.dataset.key].inp.value = '';
+      mqUpdate(livePlan, Date.now()); mqNote(r);
+    });
+
+    fillSettingsForm(); fillP4Form(); renderLocation(); renderResult(); mqRender();
+    liveReady = true; liveTick();
+  }
+
+  const api = { enDate, banglaFor, hijriFor, BN_MONTHS, HIJRI_MONTHS_BN, mosques: { get: () => clone(mosqueState), selected: () => { const s = selectedMosque(); return s ? clone(s) : null; },
+    add: addMosque, rename: renameMosque, remove: removeMosque, select: selectMosque, setJamaat, status: jamaatStatus,
+    reload: () => { mosqueState = loadMosques(); }, KEY: MOSQUE_KEY, KEYS: JAMAAT_KEYS, zonedMs },
+  windowStatus, makruhSummary, solarNoonMs, buildPlan, timelineAt, timeline, splitDuration, WAQT, compute, getState, setLocation, setSettings, resetSettings, todayYMD, ymdInTz, addDays, parseYmd,
+                locateGPS, methodPreset, METHOD_KEYS, DEFAULT_SETTINGS: clone(DEFAULT_SETTINGS),
+                DEFAULT_LOCATION: clone(DEFAULT_LOCATION), STORE_KEY, ENGINE_ID, _reload: () => { state = loadState(); } };
+  try { initUI(); } catch (e) { console.error('prayer UI init failed:', e); }
+  return api;
+})(ADHAN);
+
+})();
+</script>
+</body>
+</html>
